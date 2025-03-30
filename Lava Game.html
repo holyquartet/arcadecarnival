@@ -201,7 +201,7 @@
             width: 200px;
             text-align: center;
         }
-        .audio-loading-screen {
+        .game-loading-screen {
             position: fixed;
             top: 0;
             left: 0;
@@ -214,12 +214,12 @@
             align-items: center;
             z-index: 9999;
         }
-        .audio-loading-content {
+        .game-loading-content {
             text-align: center;
             color: white;
             max-width: 80%;
         }
-        .audio-loading-bar-container {
+        .game-loading-bar-container {
             width: 300px;
             height: 20px;
             background-color: #333;
@@ -227,7 +227,7 @@
             margin: 20px 0;
             overflow: hidden;
         }
-        .audio-loading-bar {
+        .game-loading-bar {
             height: 100%;
             width: 0;
             background: linear-gradient(to right, #ff5500, #ffaa00);
@@ -254,13 +254,13 @@
     </style>
 </head>
 <body>
-    <div id="audio-loading-screen" class="audio-loading-screen">
-        <div class="audio-loading-content">
-            <h2>Loading Game Audio</h2>
-            <div class="audio-loading-bar-container">
-                <div id="audio-loading-bar" class="audio-loading-bar"></div>
+    <div id="game-loading-screen" class="game-loading-screen">
+        <div class="game-loading-content">
+            <h2>Loading Game</h2>
+            <div class="game-loading-bar-container">
+                <div id="game-loading-bar" class="game-loading-bar"></div>
             </div>
-            <p id="audio-loading-status">Preparing sounds...</p>
+            <p id="game-loading-status">Loading game...</p>
             <button id="start-game-button" class="start-button" disabled>Start Game</button>
         </div>
     </div>
@@ -642,9 +642,9 @@
         const newGameButton = document.getElementById('new-game-button');
         
         // Audio loading screen elements
-        const audioLoadingScreen = document.getElementById('audio-loading-screen');
-        const audioLoadingBar = document.getElementById('audio-loading-bar');
-        const audioLoadingStatus = document.getElementById('audio-loading-status');
+        const audioLoadingScreen = document.getElementById('game-loading-screen');
+        const audioLoadingBar = document.getElementById('game-loading-bar');
+        const audioLoadingStatus = document.getElementById('game-loading-status');
         const startGameButton = document.getElementById('start-game-button');
         
         // Initialize the audio system
