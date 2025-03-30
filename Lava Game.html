@@ -347,7 +347,7 @@
                 lavaBubble: 'Sounds/lavaBubble.mp3',
                 menuClick: 'Sounds/menuClick.mp3',
                 landing: 'Sounds/landing.mp3',
-                backgroundMusic: 'sounds/background-music.mp3'
+                backgroundMusic: 'Sounds/background-music.mp3'
             };
             
             // Initialize audio context
@@ -1831,10 +1831,11 @@
                         player.currentPlatform = platform; // Store reference to the platform
                         canDoubleJump = true;
                         
-                        // Play landing sound when transitioning from not grounded to grounded
-                        if (!player.wasGrounded && player.grounded) {
-                            AudioManager.playSfx('landing');
-                        }
+                        // Play landing sound when transitioning from not grounded to grounded,
+// but only if player was actually falling (positive velocity)
+if (!player.wasGrounded && player.grounded && player.velY > 2) {
+    AudioManager.playSfx('landing');
+}
                     } 
                     // Hit platform from below
                     else if (player.velY < 0 && player.y >= platform.y + platform.height - 5) {
