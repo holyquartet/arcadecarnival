@@ -1831,9 +1831,9 @@
                         player.currentPlatform = platform; // Store reference to the platform
                         canDoubleJump = true;
                         
-                        // Play landing sound when transitioning from not grounded to grounded
-                        if (!player.wasGrounded && player.grounded) {
-                            AudioManager.playSfx('landing');
+                        // Play landing sound ONLY on initial landing (when transitioning from air to ground)
+if (!player.grounded && !player.wasGrounded) {
+    AudioManager.playSfx('landing');
                         }
                     } 
                     // Hit platform from below
