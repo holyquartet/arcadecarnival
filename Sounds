@@ -1,0 +1,10 @@
+your-repo/
+├── index.html
+├── audio/
+│   ├── background-music.mp3
+│   ├── jump-sound.mp3
+│   ├── lava-sizzle.mp3
+│   └── game-over.mp3
+├── js/
+│   └── game.js
+└── ...
