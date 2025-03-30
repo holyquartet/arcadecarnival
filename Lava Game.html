@@ -555,34 +555,52 @@
             }
             
             // Start background music
-            function startMusic() {
-                if (!musicEnabled || isMusicPlaying || !backgroundMusic) return false;
-                
-                try {
-                    // Make sure volume is correct
-                    backgroundMusic.volume = volume * 0.5;
-                    
-                    // Play music with error handling
-                    const playPromise = backgroundMusic.play();
-                    
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            console.error('Error playing background music:', error);
-                            // If auto-play is prevented, we'll need user interaction
-                            isMusicPlaying = false;
-                        }).then(() => {
-                            isMusicPlaying = true;
-                        });
-                    } else {
-                        isMusicPlaying = true;
+function startMusic() {
+    if (!musicEnabled || !backgroundMusic) return false;
+    
+    try {
+        // Reset the music to starting position if it was already playing
+        if (isMusicPlaying) {
+            backgroundMusic.currentTime = 0;
+            return true;
+        }
+        
+        // Make sure volume is correct
+        backgroundMusic.volume = volume * 0.5;
+        
+        console.log("Attempting to play background music...");
+        
+        // Play music with error handling
+        const playPromise = backgroundMusic.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                console.log("Background music started successfully");
+                isMusicPlaying = true;
+            }).catch(error => {
+                console.error('Error playing background music:', error);
+                // Force another attempt on next user interaction
+                setTimeout(() => {
+                    if (audioContext.state === 'running') {
+                        console.log("Retrying music playback...");
+                        backgroundMusic.play().catch(e => 
+                            console.log("Retry attempt failed:", e)
+                        );
                     }
-                    
-                    return true;
-                } catch (error) {
-                    console.error('Error starting music:', error);
-                    return false;
-                }
-            }
+                }, 1000);
+                isMusicPlaying = false;
+            });
+        } else {
+            console.log("Background music play() returned undefined (older browser)");
+            isMusicPlaying = true;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error starting music:', error);
+        return false;
+    }
+}
             
             // Stop background music
             function stopMusic() {
@@ -672,9 +690,22 @@
         }
         
         // Start button event listener
-        startGameButton.addEventListener('click', function() {
-            // Resume audio context (needed for browsers that require user interaction)
-            AudioManager.startAudioContext();
+startGameButton.addEventListener('click', function() {
+    // Resume audio context (needed for browsers that require user interaction)
+    AudioManager.startAudioContext();
+    
+    // Attempt to play background music immediately on user interaction
+    AudioManager.startMusic();
+    
+    // Hide loading screen
+    audioLoadingScreen.style.display = 'none';
+    
+    // Start the game with initial draw
+    initialDraw();
+    
+    // Log audio context state
+    console.log("Audio context state after start button:", audioContext ? audioContext.state : "No audio context");
+});
             
             // Hide loading screen
             audioLoadingScreen.style.display = 'none';
@@ -1730,8 +1761,11 @@
                 // Start audio context
                 AudioManager.startAudioContext();
                 
-                // Start background music
-                AudioManager.startMusic();
+                // Start background music with a small delay to ensure audio context is running
+setTimeout(() => {
+    AudioManager.startMusic();
+    console.log("Music started from keydown event");
+}, 100);
                 
                 // Reset player position
                 player.x = 50;
@@ -1831,10 +1865,10 @@
                         player.currentPlatform = platform; // Store reference to the platform
                         canDoubleJump = true;
                         
-                        // Play landing sound when transitioning from not grounded to grounded
-                        if (!player.wasGrounded && player.grounded) {
-                            AudioManager.playSfx('landing');
-                        }
+                        // Play landing sound ONLY on initial landing (when transitioning from air to ground)
+if (!player.grounded && !player.wasGrounded) {
+    AudioManager.playSfx('landing');
+}
                     } 
                     // Hit platform from below
                     else if (player.velY < 0 && player.y >= platform.y + platform.height - 5) {
