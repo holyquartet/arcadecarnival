@@ -5,6 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinite Lava Parkour Game</title>
     <style>
+	     /* Game instructions styling for loading screen */
+    .game-instructions {
+        background-color: rgba(0, 0, 0, 0.6);
+        border: 2px solid #ff5500;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin: 20px 0;
+        max-width: 600px;
+        text-align: left;
+        color: white;
+    }
+    
+    .game-instructions h3 {
+        color: #ff5500;
+        font-size: 20px;
+        margin-bottom: 10px;
+        text-align: center;
+        text-shadow: 0 0 5px #ff0000;
+    }
+    
+    .game-instructions ul {
+        list-style-type: none;
+        padding-left: 10px;
+    }
+    
+    .game-instructions li {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: flex-start;
+    }
+    
+    .game-instructions .key {
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #ff5500;
+        padding: 2px 8px;
+        border-radius: 4px;
+        margin-right: 10px;
+        font-family: monospace;
+        min-width: 80px;
+        text-align: center;
+        display: inline-block;
+    }
+    
+    .game-instructions .objective {
+        font-weight: bold;
+        color: #00ffff;
+        margin-top: 10px;
+        text-align: center;
+    }
 	/* Arcade Header Variables */
         :root {
         --primary: #ff2a6d;
@@ -307,36 +357,27 @@
             align-items: center;
             z-index: 9999;
         }
-        .game-loading-content {
-            text-align: center;
-            color: white;
-            max-width: 80%;
-        }
+         .game-loading-content {
+        max-width: 650px;
+        margin: 0 auto;
+    }
         .game-loading-bar-container {
-            width: 300px;
-            height: 20px;
-            background-color: #333;
-            border-radius: 10px;
-            margin: 20px 0;
-            overflow: hidden;
-        }
+        width: 100%;
+        max-width: 500px;
+        margin: 20px auto;
+    }
         .game-loading-bar {
             height: 100%;
             width: 0;
             background: linear-gradient(to right, #ff5500, #ffaa00);
             transition: width 0.3s;
         }
-        .start-button {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background-color: #ff5500;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 18px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+       .start-button {
+        margin: 20px auto 0;
+        font-size: 20px;
+        padding: 12px 40px;
+        display: block;
+    }
         .start-button:hover {
             background-color: #ff7700;
         }
@@ -359,16 +400,29 @@
     </nav>
 </header>
     <div id="game-loading-screen" class="game-loading-screen">
-        <div class="game-loading-content">
-            <h2>Loading Game</h2>
-            <div class="game-loading-bar-container">
-                <div id="game-loading-bar" class="game-loading-bar"></div>
-            </div>
-            <p id="game-loading-status">Loading game...</p>
-            <button id="start-game-button" class="start-button" disabled>Start Game</button>
+    <div class="game-loading-content">
+        <h2>Loading Infinite Lava Parkour</h2>
+        <div class="game-loading-bar-container">
+            <div id="game-loading-bar" class="game-loading-bar"></div>
         </div>
+        <p id="game-loading-status">Loading game...</p>
+        
+        <!-- New game instructions section -->
+        <div class="game-instructions">
+            <h3>HOW TO PLAY</h3>
+            <ul>
+                <li><span class="key">← → or A/D</span> Move left and right</li>
+                <li><span class="key">SPACE or W</span> Jump</li>
+                <li><span class="key">SPACE (2x)</span> Double jump!</li>
+                <li><span class="key">ESC or P</span> Pause game</li>
+            </ul>
+            <p class="objective">OBJECTIVE: Jump across platforms, avoid the lava, and reach the glowing portal at the end of each level!</p>
+            <p>Watch out for exploding lava bubbles that activate when you get close!</p>
+        </div>
+        
+        <button id="start-game-button" class="start-button" disabled>Start Game</button>
     </div>
-
+</div>
     <div class="game-container">
         <h1 class="title">INFINITE LAVA PARKOUR</h1>
         <div class="stats">
