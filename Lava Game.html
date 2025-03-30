@@ -654,11 +654,11 @@
                 // Progress callback
                 function(progress) {
                     audioLoadingBar.style.width = `${progress}%`;
-                    audioLoadingStatus.textContent = `Loading game audio: ${Math.floor(progress)}%`;
+                    audioLoadingStatus.textContent = `Loading game: ${Math.floor(progress)}%`;
                 },
                 // Complete callback
                 function() {
-                    audioLoadingStatus.textContent = 'Audio loaded! Click Start to begin';
+                    audioLoadingStatus.textContent = 'Game loaded! Click Start to begin';
                     startGameButton.disabled = false;
                     
                     // Add shine effect to button
