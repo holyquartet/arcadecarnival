@@ -17,7 +17,7 @@
 /* Header Styles */
 .arcade-header {
     background-color: rgba(0, 0, 0, 0.8);
-    padding: 1rem 10%;
+    padding: 1rem 5%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -25,6 +25,7 @@
     width: 100%;
     z-index: 100;
     top: 0;
+    flex-wrap: wrap;
 }
 
 .arcade-logo {
@@ -42,10 +43,12 @@
 .arcade-nav ul {
     display: flex;
     list-style: none;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .arcade-nav ul li {
-    margin-left: 2rem;
+    margin: 0.5rem 1rem;
 }
 
 .arcade-nav ul li a {
@@ -53,10 +56,36 @@
     text-decoration: none;
     font-weight: bold;
     transition: color 0.3s;
+    white-space: nowrap;
 }
 
 .arcade-nav ul li a:hover {
     color: var(--accent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .arcade-header {
+        padding: 0.8rem 3%;
+        flex-direction: column;
+    }
+    
+    .arcade-logo {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .arcade-nav ul {
+        margin-top: 0.5rem;
+    }
+    
+    .arcade-nav ul li {
+        margin: 0.3rem 0.8rem;
+    }
+    
+    .arcade-nav ul li a {
+        font-size: 0.9rem;
+    }
 }
         body {
             margin: 0;
@@ -72,14 +101,20 @@
             background: #000;
         }
         .game-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%;
-            margin: 80px auto 0;
-            text-align: center;
-            padding: 0 100px;
-            box-sizing: border-box;
-        }
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    text-align: center;
+    padding: 80px 20px 0; /* Top padding to account for header */
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .game-container {
+        padding: 120px 20px 0; /* More top padding for stacked header */
+    }
+}
         .controls {
             color: white;
             margin: 20px auto;
