@@ -201,9 +201,70 @@
             width: 200px;
             text-align: center;
         }
+        .audio-loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .audio-loading-content {
+            text-align: center;
+            color: white;
+            max-width: 80%;
+        }
+        .audio-loading-bar-container {
+            width: 300px;
+            height: 20px;
+            background-color: #333;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .audio-loading-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(to right, #ff5500, #ffaa00);
+            transition: width 0.3s;
+        }
+        .start-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background-color: #ff5500;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .start-button:hover {
+            background-color: #ff7700;
+        }
+        .start-button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
+    <div id="audio-loading-screen" class="audio-loading-screen">
+        <div class="audio-loading-content">
+            <h2>Loading Game Audio</h2>
+            <div class="audio-loading-bar-container">
+                <div id="audio-loading-bar" class="audio-loading-bar"></div>
+            </div>
+            <p id="audio-loading-status">Preparing sounds...</p>
+            <button id="start-game-button" class="start-button" disabled>Start Game</button>
+        </div>
+    </div>
+
     <div class="game-container">
         <h1 class="title">INFINITE LAVA PARKOUR</h1>
         <div class="stats">
@@ -256,10 +317,8 @@
     </div>
 
     <script>
-        // Audio System
+        // Enhanced Audio System
         const AudioManager = (function() {
-            // Audio implementation remains the same
-            // Web Audio API context
             let audioContext;
             
             // Audio states
@@ -267,43 +326,45 @@
             let sfxEnabled = true;
             let volume = 0.5; // 0 to 1
             
-            // Set this to true to use audio files instead of procedural sounds
-            // When set to true, the game will look for audio files in the "sounds" folder
-            const USE_AUDIO_FILES = true;
-            
             // Background music
-            let musicOscillator = null;
-            let musicGainNode = null;
             let backgroundMusic = null;
             let isMusicPlaying = false;
             
-            // Sound effects references
-            const soundEffects = {
-                jump: null,
-                doubleJump: null,
-                death: null,
-                levelComplete: null,
-                lavaBubble: null,
-                menuClick: null,
-                landing: null
+            // Sound effect buffers and sources
+            const soundBuffers = {};
+            let loadedSounds = 0;
+            let totalSounds = 0;
+            let loadingComplete = false;
+            let onLoadProgress = null;
+            let onLoadComplete = null;
+            
+            // Sound files configuration - define all sounds here
+            const soundFiles = {
+                jump: 'sounds/jump.mp3',
+                doubleJump: 'sounds/doubleJump.mp3',
+                death: 'sounds/death.mp3',
+                levelComplete: 'sounds/levelComplete.mp3',
+                lavaBubble: 'sounds/lavaBubble.mp3',
+                menuClick: 'sounds/menuClick.mp3',
+                landing: 'sounds/landing.mp3',
+                backgroundMusic: 'sounds/background-music.mp3'
             };
             
             // Initialize audio context
             function init() {
                 try {
-                    // Create audio context
+                    // Create audio context with fallback
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     audioContext = new AudioContext();
-                    
-                    // Create sound effects
-                    createSoundEffects();
                     
                     // Set up UI controls
                     setupControls();
                     
                     console.log("Audio system initialized successfully");
+                    return true;
                 } catch (error) {
                     console.error("Error initializing audio system:", error);
+                    return false;
                 }
             }
             
@@ -342,173 +403,219 @@
                 });
             }
             
+            // Load all game audio
+            function preloadAudio(progressCallback, completeCallback) {
+                onLoadProgress = progressCallback;
+                onLoadComplete = completeCallback;
+                
+                totalSounds = Object.keys(soundFiles).length;
+                loadedSounds = 0;
+                
+                // Start by resuming audio context (if suspended)
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                // Load sound effects
+                for (const [sound, filePath] of Object.entries(soundFiles)) {
+                    if (sound === 'backgroundMusic') {
+                        // Handle music separately
+                        preloadMusic(filePath);
+                    } else {
+                        // Load sound effect
+                        loadSoundBuffer(sound, filePath);
+                    }
+                }
+            }
+            
+            // Load a sound file into buffer
+            function loadSoundBuffer(name, url) {
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Failed to load sound file ${url}: ${response.status} ${response.statusText}`);
+                        }
+                        return response.arrayBuffer();
+                    })
+                    .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                    .then(audioBuffer => {
+                        soundBuffers[name] = audioBuffer;
+                        soundLoaded();
+                        console.log(`Sound '${name}' loaded successfully`);
+                    })
+                    .catch(error => {
+                        console.error(`Error loading sound '${name}' from ${url}:`, error);
+                        // Count as loaded even if there's an error to avoid hanging
+                        soundLoaded();
+                    });
+            }
+            
+            // Preload background music
+            function preloadMusic(url) {
+                backgroundMusic = new Audio(url);
+                backgroundMusic.loop = true;
+                backgroundMusic.volume = volume * 0.5; // Lower initial volume for music
+                
+                // Set up event listeners for music loading
+                backgroundMusic.addEventListener('canplaythrough', function onCanPlay() {
+                    backgroundMusic.removeEventListener('canplaythrough', onCanPlay);
+                    soundLoaded();
+                    console.log('Background music loaded successfully');
+                });
+                
+                backgroundMusic.addEventListener('error', function(e) {
+                    console.error('Error loading background music:', e);
+                    // Count as loaded even if there's an error
+                    soundLoaded();
+                });
+                
+                // Start loading the music file
+                backgroundMusic.load();
+            }
+            
+            // Called when each sound is loaded
+            function soundLoaded() {
+                loadedSounds++;
+                
+                // Calculate and report progress
+                const progress = (loadedSounds / totalSounds) * 100;
+                if (onLoadProgress) {
+                    onLoadProgress(progress);
+                }
+                
+                // Check if all sounds are loaded
+                if (loadedSounds >= totalSounds) {
+                    loadingComplete = true;
+                    if (onLoadComplete) {
+                        onLoadComplete();
+                    }
+                }
+            }
+            
             // Start audio context (needs to be triggered by user interaction)
             function startAudioContext() {
                 if (audioContext && audioContext.state === 'suspended') {
-                    audioContext.resume();
+                    audioContext.resume().then(() => {
+                        console.log('Audio context resumed successfully');
+                    }).catch(error => {
+                        console.error('Failed to resume audio context:', error);
+                    });
+                    return true;
                 }
+                return false;
             }
             
-            // Create sound effects - chooses between procedural and file-based audio
-            function createSoundEffects() {
-                if (USE_AUDIO_FILES) {
-                    createFileBasedSoundEffects();
-                } else {
-                    createProceduralSoundEffects();
-                }
-            }
-            
-            // Create sound effects using audio files
-            function createFileBasedSoundEffects() {
-                // Create audio elements for each sound
-                const sounds = ['jump', 'doubleJump', 'death', 'levelComplete', 'lavaBubble', 'menuClick', 'landing'];
+            // Play a sound effect
+            function playSfx(name, options = {}) {
+                if (!sfxEnabled || !audioContext || audioContext.state !== 'running') return null;
                 
-                sounds.forEach(sound => {
-                    // Create the play function for each sound
-                    soundEffects[sound] = {
-                        audioElement: null,
-                        load: function() {
-                            this.audioElement = new Audio(`sounds/${sound}.mp3`);
-                            this.audioElement.volume = volume;
-                            
-                            // Preload
-                            this.audioElement.load();
-                        },
-                        play: function() {
-                            if (!sfxEnabled || !this.audioElement) return;
-                            
-                            // Reset the audio to start
-                            this.audioElement.currentTime = 0;
-                            
-                            // Set volume with sound-specific adjustments
-                            if (sound === 'jump') {
-                                this.audioElement.volume = volume * 0.5; // Make jump 50% louder
-                            } else if (sound === 'doubleJump') {
-                                this.audioElement.volume = volume * 0.5; // Make double jump 80% louder
-                            } else {
-                                this.audioElement.volume = volume;
-                            }
-                            // Play the sound
-                            this.audioElement.play().catch(e => {
-                                console.log(`Error playing sound ${sound}:`, e);
-                            });
-                        }
+                const buffer = soundBuffers[name];
+                if (!buffer) {
+                    console.warn(`Sound effect '${name}' not found`);
+                    return null;
+                }
+                
+                try {
+                    // Create source and gain nodes
+                    const source = audioContext.createBufferSource();
+                    const gainNode = audioContext.createGain();
+                    
+                    // Connect nodes
+                    source.buffer = buffer;
+                    source.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // Set volume (with sound-specific adjustments)
+                    let adjustedVolume = volume;
+                    if (name === 'jump' || name === 'doubleJump') {
+                        adjustedVolume *= 0.7; // Make jump sounds a bit quieter
+                    } else if (name === 'death' || name === 'levelComplete') {
+                        adjustedVolume *= 1.2; // Make important sounds a bit louder
+                    } else if (name === 'menuClick') {
+                        adjustedVolume *= 0.5; // Make UI sounds quieter
+                    }
+                    
+                    // Apply volume (with optional override)
+                    gainNode.gain.value = options.volume !== undefined ? options.volume : adjustedVolume;
+                    
+                    // Play sound
+                    source.start(0);
+                    
+                    // Clean up when done
+                    source.onended = function() {
+                        source.disconnect();
+                        gainNode.disconnect();
                     };
                     
-                    // Load the sound
-                    soundEffects[sound].load();
-                });
-            }
-            
-            // Create procedural sound effects using Web Audio API
-            function createProceduralSoundEffects() {
-                // These are all procedurally generated sounds
-                
-                // Rest of audio implementation...
-                // (Keeping the existing procedural sound implementations)
+                    return source;
+                } catch (error) {
+                    console.error(`Error playing sound '${name}':`, error);
+                    return null;
+                }
             }
             
             // Start background music
             function startMusic() {
-                if (!musicEnabled || isMusicPlaying) return;
+                if (!musicEnabled || isMusicPlaying || !backgroundMusic) return false;
                 
-                if (USE_AUDIO_FILES) {
-                    startFileBasedMusic();
-                } else {
-                    startProceduralMusic();
+                try {
+                    // Make sure volume is correct
+                    backgroundMusic.volume = volume * 0.5;
+                    
+                    // Play music with error handling
+                    const playPromise = backgroundMusic.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.error('Error playing background music:', error);
+                            // If auto-play is prevented, we'll need user interaction
+                            isMusicPlaying = false;
+                        }).then(() => {
+                            isMusicPlaying = true;
+                        });
+                    } else {
+                        isMusicPlaying = true;
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error('Error starting music:', error);
+                    return false;
                 }
-            }
-            
-            // Start background music using an audio file
-            function startFileBasedMusic() {
-                if (!musicEnabled || isMusicPlaying) return;
-                
-                // Create audio element if it doesn't exist
-                if (!backgroundMusic) {
-                    backgroundMusic = new Audio('sounds/background-music.mp3');
-                    backgroundMusic.loop = true;
-                    backgroundMusic.volume = volume * 0.5; // Slightly quieter
-                }
-                
-                // Play the music
-                backgroundMusic.play().catch(e => {
-                    console.log("Error playing background music:", e);
-                });
-                
-                isMusicPlaying = true;
-            }
-            
-            // Start procedural background music using Web Audio API
-            function startProceduralMusic() {
-                // Existing procedural music implementation...
             }
             
             // Stop background music
             function stopMusic() {
-                if (USE_AUDIO_FILES) {
-                    if (backgroundMusic) {
-                        backgroundMusic.pause();
-                        backgroundMusic.currentTime = 0;
-                    }
-                } else {
-                    if (musicOscillator) {
-                        try {
-                            musicOscillator.stop();
-                            musicOscillator.disconnect();
-                            musicOscillator = null;
-                        } catch (e) {
-                            console.log("Error stopping music", e);
-                        }
-                    }
-                    
-                    if (musicGainNode) {
-                        try {
-                            musicGainNode.disconnect();
-                            musicGainNode = null;
-                        } catch (e) {
-                            console.log("Error disconnecting gain node", e);
-                        }
-                    }
-                }
+                if (!backgroundMusic) return false;
                 
-                isMusicPlaying = false;
-            }
-            
-            // Update volume levels
-            function updateVolume() {
-                if (USE_AUDIO_FILES) {
-                    // Update music volume
-                    if (backgroundMusic) {
-                        backgroundMusic.volume = volume * 0.5;
-                    }
-                    
-                    // Update all sound effect volumes
-                    for (const sound in soundEffects) {
-                        if (soundEffects[sound].audioElement) {
-                            soundEffects[sound].audioElement.volume = volume;
-                        }
-                    }
-                } else {
-                    if (musicGainNode) {
-                        musicGainNode.gain.setValueAtTime(volume * 0.2, audioContext.currentTime);
-                    }
+                try {
+                    backgroundMusic.pause();
+                    backgroundMusic.currentTime = 0;
+                    isMusicPlaying = false;
+                    return true;
+                } catch (error) {
+                    console.error('Error stopping music:', error);
+                    return false;
                 }
             }
             
-            // Play a specific sound effect
-            function playSfx(sfxName) {
-                if (soundEffects[sfxName]) {
-                    soundEffects[sfxName].play();
+            // Update volume levels for all audio
+            function updateVolume() {
+                // Update music volume
+                if (backgroundMusic) {
+                    backgroundMusic.volume = volume * 0.5;
                 }
             }
             
             // Public API
             return {
                 init: init,
+                preloadAudio: preloadAudio,
                 startAudioContext: startAudioContext,
                 playSfx: playSfx,
                 startMusic: startMusic,
-                stopMusic: stopMusic
+                stopMusic: stopMusic,
+                updateVolume: updateVolume
             };
         })();
 
@@ -534,8 +641,47 @@
         const leaderboardEntriesElement = document.getElementById('leaderboard-entries');
         const newGameButton = document.getElementById('new-game-button');
         
+        // Audio loading screen elements
+        const audioLoadingScreen = document.getElementById('audio-loading-screen');
+        const audioLoadingBar = document.getElementById('audio-loading-bar');
+        const audioLoadingStatus = document.getElementById('audio-loading-status');
+        const startGameButton = document.getElementById('start-game-button');
+        
         // Initialize the audio system
-        AudioManager.init();
+        if (AudioManager.init()) {
+            // Start preloading audio
+            AudioManager.preloadAudio(
+                // Progress callback
+                function(progress) {
+                    audioLoadingBar.style.width = `${progress}%`;
+                    audioLoadingStatus.textContent = `Loading game audio: ${Math.floor(progress)}%`;
+                },
+                // Complete callback
+                function() {
+                    audioLoadingStatus.textContent = 'Audio loaded! Click Start to begin';
+                    startGameButton.disabled = false;
+                    
+                    // Add shine effect to button
+                    startGameButton.style.boxShadow = '0 0 10px #ff5500';
+                }
+            );
+        } else {
+            // Fallback if audio system fails to initialize
+            audioLoadingStatus.textContent = 'Audio system unavailable. Click Start to play without sound.';
+            startGameButton.disabled = false;
+        }
+        
+        // Start button event listener
+        startGameButton.addEventListener('click', function() {
+            // Resume audio context (needed for browsers that require user interaction)
+            AudioManager.startAudioContext();
+            
+            // Hide loading screen
+            audioLoadingScreen.style.display = 'none';
+            
+            // Start the game with initial draw
+            initialDraw();
+        });
         
         // Canvas sizing and responsive behavior
         let baseCanvasWidth = 800;  // Original design width
@@ -1575,7 +1721,7 @@
         
         document.addEventListener('keydown', function(e) {
             // Start game on any key press
-            if (!gameStarted) {
+            if (!gameStarted && audioLoadingScreen.style.display === 'none') {
                 gameStarted = true;
                 isPaused = false;
                 lastTime = 0; // Reset time
@@ -2116,18 +2262,6 @@
         
         // Load leaderboard from localStorage
         loadLeaderboard();
-        
-        // Initialize the game
-        gameStarted = false;
-        isPaused = true;
-        player.x = 50;
-        player.y = 300;
-        
-        // Start the animation loop immediately but in paused state
-        requestAnimationFrame(gameLoop);
-        
-        // Call initial draw
-        initialDraw();
     </script>
 </body>
 </html>
