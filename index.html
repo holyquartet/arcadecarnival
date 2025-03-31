@@ -268,74 +268,6 @@
             color: var(--secondary);
         }
         
-        /* Testimonials */
-        .testimonials {
-            padding: 5rem 10%;
-            text-align: center;
-        }
-        
-        .testimonial-card {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            background-color: rgba(0, 0, 0, 0.5);
-            border-radius: 10px;
-            position: relative;
-        }
-        
-        .testimonial-text {
-            font-size: 1.2rem;
-            font-style: italic;
-            margin-bottom: 1.5rem;
-        }
-        
-        .testimonial-author {
-            font-weight: bold;
-            color: var(--accent);
-        }
-        
-        /* Newsletter */
-        .newsletter {
-            padding: 3rem 10%;
-            background-color: rgba(0, 0, 0, 0.7);
-            text-align: center;
-        }
-        
-        .newsletter h2 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .newsletter-form {
-            display: flex;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .newsletter-input {
-            flex: 1;
-            padding: 1rem;
-            border: none;
-            border-radius: 50px 0 0 50px;
-            font-size: 1rem;
-        }
-        
-        .newsletter-button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 0 50px 50px 0;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .newsletter-button:hover {
-            background-color: var(--accent);
-        }
-        
         /* Footer */
         footer {
             background-color: rgba(0, 0, 0, 0.9);
@@ -395,48 +327,6 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        /* Responsive */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                padding: 1rem 5%;
-            }
-            
-            nav ul {
-                margin-top: 1rem;
-            }
-            
-            nav ul li {
-                margin-left: 1rem;
-                margin-right: 1rem;
-            }
-            
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
-            .hero p {
-                font-size: 1.2rem;
-            }
-            
-            .section-title {
-                font-size: 2rem;
-            }
-            
-            .newsletter-form {
-                flex-direction: column;
-            }
-            
-            .newsletter-input {
-                border-radius: 50px;
-                margin-bottom: 1rem;
-            }
-            
-            .newsletter-button {
-                border-radius: 50px;
-            }
-        }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -446,9 +336,6 @@
             <ul>
                 <li><a href="#games">Games</a></li>
                 <li><a href="#features">Features</a></li>
-                <li><a href="#testimonials">Reviews</a></li>
-                <li><a href="#newsletter">Newsletter</a></li>
-                <li><a href="#contact">Contact</a></li>
             </ul>
         </nav>
     </header>
@@ -480,33 +367,14 @@
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">🎮</div>
-                <h3>100+ Games</h3>
-                <p>Access to over a hundred classic and modern arcade games, with new titles added monthly.</p>
+                <h3>Arcade Games</h3>
+                <p>Access to bunch of classic and modern arcade games, with new titles coming soon!</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🏆</div>
                 <h3>Leaderboards</h3>
-                <p>Compete with players worldwide and see your name on our global leaderboards.</p>
+                <p>Global leaderboards are coming soon!</p>
             </div>
-    </section>
-    
-    <!-- Testimonials -->
-    <section class="testimonials" id="testimonials">
-        <h2 class="section-title">What Players Say</h2>
-        <div class="testimonial-card">
-            <p class="testimonial-text">"Arcade Carnival brings back all the nostalgia of my childhood arcade days, but with modern features and convenience. The collection of games is impressive and the community is amazing!"</p>
-            <p class="testimonial-author">- Alex Johnson, Gamer</p>
-        </div>
-    </section>
-    
-    <!-- Newsletter -->
-    <section class="newsletter" id="newsletter">
-        <h2>Stay Updated</h2>
-        <p>Subscribe to our newsletter for game updates, tournaments, and exclusive offers.</p>
-        <form class="newsletter-form">
-            <input type="email" placeholder="Enter your email" class="newsletter-input" required>
-            <button type="submit" class="newsletter-button">Subscribe</button>
-        </form>
     </section>
     
     <!-- Footer -->
@@ -516,7 +384,6 @@
                 <h3>Arcade Carnival</h3>
                 <p>Your ultimate destination for classic and modern arcade gaming experience.</p>
                 <div class="social-icons">
-                    <a href="#">📱</a>
                     <a href="#">📷</a>
                     <a href="#">🐦</a>
                     <a href="#">📺</a>
@@ -527,16 +394,6 @@
                 <ul class="footer-links">
                     <li><a href="#games">Games</a></li>
                     <li><a href="#features">Features</a></li>
-                    <li><a href="#testimonials">Testimonials</a></li>
-                    <li><a href="#newsletter">Newsletter</a></li>
-                </ul>
-            </div>
-            <div class="footer-section">
-                <h3>Contact Us</h3>
-                <ul class="footer-links">
-                    <li>Email: info@arcadecarnival.com</li>
-                    <li>Phone: (123) 456-7890</li>
-                    <li>Address: 123 Game Street, Arcade City</li>
                 </ul>
             </div>
         </div>
