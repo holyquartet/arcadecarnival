@@ -327,6 +327,48 @@
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
+        /* Responsive */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                padding: 1rem 5%;
+            }
+            
+            nav ul {
+                margin-top: 1rem;
+            }
+            
+            nav ul li {
+                margin-left: 1rem;
+                margin-right: 1rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .newsletter-form {
+                flex-direction: column;
+            }
+            
+            .newsletter-input {
+                border-radius: 50px;
+                margin-bottom: 1rem;
+            }
+            
+            .newsletter-button {
+                border-radius: 50px;
+            }
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -376,7 +418,7 @@
                 <p>Global leaderboards are coming soon!</p>
             </div>
     </section>
-    
+            
     <!-- Footer -->
     <footer id="contact">
         <div class="footer-content">
@@ -384,7 +426,7 @@
                 <h3>Arcade Carnival</h3>
                 <p>Your ultimate destination for classic and modern arcade gaming experience.</p>
                 <div class="social-icons">
-                    <a href="#">📷</a>
+                    <a href="#">📱</a>
                     <a href="#">🐦</a>
                     <a href="#">📺</a>
                 </div>
