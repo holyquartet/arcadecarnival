@@ -174,11 +174,29 @@
         }
         
         .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .games-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+}
         
         .game-card {
             background-color: rgba(0, 0, 0, 0.5);
@@ -395,14 +413,47 @@
         <h2 class="section-title">Featured Games</h2>
         <div class="games-grid">
             <div class="game-card">
-                <img src="lava_placeholder.png" alt="Infinite Lava Parkour" class="game-image">
-                <div class="game-details">
-                    <h3>Infinite Lava Parkour</h3>
-                    <p>Find your way through the lava and climb the leaderboards!</p>
-                    <a href="LavaGame.html" class="play-button">Play Now</a>
-                </div>
-            </div>
-    </section>
+    <img src="lava_placeholder.png" alt="Infinite Lava Parkour" class="game-image">
+    <div class="game-details">
+        <h3>Infinite Lava Parkour</h3>
+        <p>Find your way through the lava and climb the leaderboards!</p>
+        <a href="LavaGame.html" class="play-button">Play Now</a>
+    </div>
+</div>
+
+<div class="game-card">
+    <img src="Materials\coming-soon.png" alt="New Game Coming Soon!" class="game-image">
+    <div class="game-details">
+        <h3>New Game Coming Soon!</h3>
+        <p></p>
+    </div>
+</div>
+
+<div class="game-card">
+    <img src="/api/placeholder/400/200" alt="CATch the food!" class="game-image">
+    <div class="game-details">
+        <h3>CATch the food!</h3>
+        <p>Help the cat catch falling food!</p>
+        <a href="CATch_the_food/CATch_the_food.html" class="play-button">Play Now</a>
+    </div>
+</div>
+
+<div class="game-card">
+    <img src="Materials/work-in-progress.png" alt="New Game Coming Soon!" class="game-image">
+    <div class="game-details">
+        <h3>New Game Coming Soon!</h3>
+        <p></p>
+    </div>
+</div>
+
+<div class="game-card">
+    <img src="Materials/coming-soon.png" alt="New Game Coming Soon!" class="game-image">
+    <div class="game-details">
+        <h3>New Game Coming Soon!</h3>
+        <p></p>
+    </div>
+</div>
+</section>
     
     <!-- Features -->
     <section class="features" id="features">
