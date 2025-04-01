@@ -5,8 +5,137 @@
   <!-- Added viewport meta tag for proper mobile scaling -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <style>
+    /* Arcade Header Variables */
+    :root {
+        --primary: #ff2a6d;
+        --secondary: #05d9e8;
+        --dark: #1a1a2e;
+        --light: #d1f7ff;
+        --accent: #ffd300;
+        --header-height: 90px;
+        --header-height-mobile: 120px;
+    }
+    
+    /* Reset for the header */
+    .arcade-header * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    /* Main Header Container */
+    .arcade-header {
+        background-color: rgba(0, 0, 0, 0.9);
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 9999;
+        height: var(--header-height);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 5px 0;
+    }
+    
+    /* Logo */
+    .arcade-logo {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: var(--primary);
+        text-shadow: 0 0 5px var(--primary);
+        padding: 3px 15px;
+        margin-bottom: 3px;
+    }
+    
+    .arcade-logo span {
+        color: var(--secondary);
+        text-shadow: 0 0 5px var(--secondary);
+    }
+    
+    /* Navigation */
+    .arcade-nav {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .arcade-nav ul {
+        display: flex;
+        flex-wrap: nowrap;
+        list-style: none;
+        justify-content: center;
+        padding: 0 10px;
+        width: 100%;
+    }
+    
+    .arcade-nav li {
+        margin: 0 10px;
+        white-space: nowrap;
+    }
+    
+    .arcade-nav a {
+        color: var(--light);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: bold;
+        padding: 5px;
+        display: block;
+    }
+    
+    .arcade-nav a:hover {
+        color: var(--accent);
+    }
+    
+    /* Hide scrollbar but allow scrolling */
+    .arcade-nav::-webkit-scrollbar {
+        display: none;
+    }
+    .arcade-nav {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    /* Create a body container that accounts for header */
+    body {
+        padding-top: var(--header-height);
+        margin: 0;
+        overflow: hidden;
+        background-color: #111;
+        font-family: Arial, sans-serif;
+        color: white;
+        touch-action: none; /* Prevent default touch actions like double-tap zoom */
+    }
+    
+    /* Adjust game container for header */
+    #game-container {
+        position: relative;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto;
+        padding: 0 !important;
+        box-sizing: border-box;
+        height: calc(100vh - var(--header-height));
+        overflow: hidden;
+    }
+    
+    @media (max-width: 768px) {
+        body {
+            padding-top: var(--header-height-mobile);
+        }
+        
+        .arcade-header {
+            height: var(--header-height-mobile);
+        }
+        
+        #game-container {
+            height: calc(100vh - var(--header-height-mobile));
+        }
+    }
+
     body {
       margin: 0;
+      padding-top: var(--header-height);
       overflow: hidden;
       background-color: #111;
       font-family: Arial, sans-serif;
@@ -14,10 +143,14 @@
       touch-action: none; /* Prevent default touch actions like double-tap zoom */
     }
     
-    #game-container {
-      position: relative;
-      width: 100%;
-      height: 100vh;
+    @media (max-width: 768px) {
+      body {
+        padding-top: var(--header-height-mobile);
+      }
+      
+      .arcade-header {
+        height: var(--header-height-mobile);
+      }
     }
     
     #game-canvas {
@@ -305,6 +438,18 @@
   </style>
 </head>
 <body>
+  <!-- New Arcade Header -->
+  <header class="arcade-header">
+    <div class="arcade-logo">Arcade<span>Carnival</span></div>
+    <nav class="arcade-nav">
+        <ul>
+            <li><a href="#" onclick="window.location.reload(); return false;">CATch the food</a></li>
+            <li><a href="index.html">More Games</a></li>
+            <li><a href="index.html">Back to Arcade</a></li>
+        </ul>
+    </nav>
+  </header>
+
   <!-- Audio elements -->
   <audio id="background-music" loop preload="auto">
     <source src="sounds/background-music.mp3" type="audio/mpeg">
@@ -442,6 +587,30 @@
   </div>
 
   <script>
+    // Function to show leaderboard screen from header navigation
+    function showHighScoresScreen(isNewScore = false) {
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      highScoresScreen.style.display = 'flex';
+      pauseScreen.style.display = 'none';
+      
+      // Show or hide the name input based on whether this is a new high score
+      newHighScoreInput.style.display = isNewScore ? 'block' : 'none';
+      
+      // Display current high scores
+      displayHighScores();
+      
+      // Focus the name input if it's visible
+      if (isNewScore) {
+        playerNameInput.focus();
+      }
+      
+      // Pause game if it's running
+      if (gameActive && !gamePaused) {
+        togglePause();
+      }
+    }
+
     // Game variables
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
@@ -785,29 +954,19 @@
       return playerScore > highScores[highScores.length - 1].score;
     }
     
-    function showHighScoresScreen(isNewScore = false) {
-      startScreen.style.display = 'none';
-      gameOverScreen.style.display = 'none';
-      highScoresScreen.style.display = 'flex';
-      pauseScreen.style.display = 'none';
-      
-      // Show or hide the name input based on whether this is a new high score
-      newHighScoreInput.style.display = isNewScore ? 'block' : 'none';
-      
-      // Display current high scores
-      displayHighScores();
-      
-      // Focus the name input if it's visible
-      if (isNewScore) {
-        playerNameInput.focus();
-      }
-    }
-    
     // Initialize game
     function init() {
-      // Set canvas size
+      // Get header height for proper positioning
+      const headerHeight = window.innerWidth <= 768 ? 
+        parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height-mobile')) : 
+        parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
+      
+      // Add a buffer to ensure no overlap
+      const heightBuffer = 5;
+      
+      // Set canvas size accounting for header
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.height = window.innerHeight - headerHeight - heightBuffer;
       
       // Position cat at bottom center
       cat.x = canvas.width / 2 - cat.width / 2;
@@ -1663,6 +1822,9 @@
       pauseSound.load();
       unpauseSound.load();
       
+      // Adjust positioning based on header
+      adjustGamePositioning();
+      
       // Add a global click listener to aid in audio initialization
       document.addEventListener('click', function globalInitClick() {
         // Try to initialize audio
@@ -1682,16 +1844,39 @@
       });
     });
     
+    // Function to adjust game positioning based on header height
+    function adjustGamePositioning() {
+      const headerHeight = window.innerWidth <= 768 ? 
+        parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height-mobile')) : 
+        parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-height'));
+      
+      // Add a buffer to ensure no overlap
+      const heightBuffer = 5;
+      
+      // Adjust canvas size to account for header
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight - headerHeight - heightBuffer;
+      
+      // Position cat at bottom of visible area
+      cat.y = canvas.height - cat.height - 20;
+      
+      // Adjust position of UI elements
+      scoreDisplay.style.top = '10px';
+      livesDisplay.style.top = '10px'; 
+      pauseButton.style.top = '10px';
+    }
+    
     // Handle window resize and orientation change
     window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      cat.y = canvas.height - cat.height - 20;
+      adjustGamePositioning();
       createBackgroundElements();
       checkOrientation();
     });
     
-    window.addEventListener('orientationchange', checkOrientation);
+    window.addEventListener('orientationchange', () => {
+      checkOrientation();
+      setTimeout(adjustGamePositioning, 100); // Small delay to ensure orientation completes
+    });
   </script>
 </body>
 </html>
