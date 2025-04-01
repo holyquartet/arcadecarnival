@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CATch the food!</title>
+  <!-- Added viewport meta tag for proper mobile scaling -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #111;
+      font-family: Arial, sans-serif;
+      color: white;
+      touch-action: none; /* Prevent default touch actions like double-tap zoom */
+    }
+    
+    #game-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+    
+    #game-canvas {
+      width: 100%;
+      height: 100%;
+      background: #faf8f1;
+    }
+    
+    #score-display {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 24px;
+      color: #e67e22;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+    
+    #lives-display {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      color: #e74c3c;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+    
+    /* Updated Audio Controls CSS */
+    .audio-controls {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+      justify-content: center;
+    }
+    
+    .audio-control-button {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      transition: all 0.3s;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    }
+    
+    .audio-icon {
+      height: 24px;
+      margin-bottom: 2px;
+    }
+    
+    .audio-label {
+      font-size: 10px;
+      font-weight: bold;
+    }
+    
+    /* Active state (ON) */
+    .audio-control-button.active {
+      background-color: #48c774;
+      color: white;
+    }
+    
+    /* Inactive state (OFF) */
+    .audio-control-button.inactive {
+      background-color: #ff6b6b;
+      color: white;
+    }
+    
+    /* Hover effects */
+    .audio-control-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+    
+    #pause-button {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 2px solid white;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px; /* Increased base font size */
+    }
+    
+    #start-screen, #game-over-screen, #high-scores-screen, #pause-screen, #orientation-warning {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      box-sizing: border-box; /* Account for padding */
+      text-align: center; /* Center all text */
+    }
+    
+    .screen-title {
+      font-size: 48px;
+      margin-bottom: 20px;
+      color: #f39c12;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+    }
+    
+    .screen-subtitle {
+      font-size: 24px;
+      margin-bottom: 40px;
+      color: #fff;
+      text-align: center;
+    }
+    
+    .button {
+      padding: 15px 30px;
+      font-size: 20px;
+      background-color: #ff6600;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 10px;
+      /* Make sure buttons have adequate touch area */
+      min-width: 150px;
+      min-height: 60px;
+    }
+    
+    .button:hover {
+      background-color: #ff8833;
+    }
+    
+    /* Performance option */
+    .performance-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    
+    .performance-toggle label {
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    
+    /* High Score Table Styles */
+    .high-scores-container {
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 10px;
+      padding: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+      width: 90%;
+      max-width: 600px;
+    }
+    
+    .high-scores-table {
+      width: 100%;
+      border-collapse: collapse;
+      color: white;
+      margin-bottom: 20px;
+    }
+    
+    .high-scores-table th {
+      background-color: #ff6600;
+      padding: 10px;
+      text-align: left;
+    }
+    
+    .high-scores-table td {
+      padding: 10px;
+      border-bottom: 1px solid #444;
+    }
+    
+    .high-scores-table tr:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .high-scores-table tr.current-score {
+      background-color: rgba(255, 102, 0, 0.3);
+      font-weight: bold;
+    }
+    
+    .name-input-container {
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .name-input {
+      padding: 10px;
+      font-size: 18px;
+      border-radius: 5px;
+      border: none;
+      margin-right: 10px;
+      width: 200px;
+    }
+    
+    .button-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+      gap: 10px;
+    }
+    
+    /* Orientation warning styles */
+    #orientation-warning {
+      z-index: 1000;
+      background-color: rgba(0, 0, 0, 0.9);
+    }
+    
+    .rotate-icon {
+      width: 100px;
+      height: 100px;
+      margin: 20px;
+      animation: rotate 2s infinite;
+    }
+    
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      25% { transform: rotate(90deg); }
+      50% { transform: rotate(90deg); }
+      75% { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+    
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+      .screen-title {
+        font-size: 36px;
+      }
+      
+      .screen-subtitle {
+        font-size: 18px;
+      }
+      
+      .button {
+        padding: 12px 24px;
+        font-size: 18px;
+      }
+      
+      #score-display, #lives-display {
+        font-size: 18px;
+      }
+      
+      .high-scores-container {
+        width: 95%;
+        padding: 10px;
+      }
+      
+      .high-scores-table th, .high-scores-table td {
+        padding: 8px;
+        font-size: 14px;
+      }
+    }
+    
+    /* Extra small devices */
+    @media (max-width: 480px) {
+      .screen-title {
+        font-size: 28px;
+      }
+      
+      .screen-subtitle {
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+      
+      .button {
+        padding: 10px 20px;
+        font-size: 16px;
+        min-width: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Audio elements -->
+  <audio id="background-music" loop preload="auto">
+    <source src="sounds/background-music.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="lose-life-sound" preload="auto">
+    <source src="sounds/angry-meow.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="pause-sound" preload="auto">
+    <source src="sounds/pause.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="unpause-sound" preload="auto">
+    <source src="sounds/unpause.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Orientation warning for mobile -->
+  <div id="orientation-warning" style="display: none;">
+    <h2>Please Rotate Your Device</h2>
+    <p>This game plays best in landscape orientation.</p>
+    <div class="rotate-icon">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect x="25" y="35" width="50" height="30" rx="5" stroke="white" stroke-width="4" fill="none"/>
+        <path d="M50 20 L60 30 L40 30 Z" fill="white"/>
+        <path d="M50 80 L60 70 L40 70 Z" fill="white"/>
+      </svg>
+    </div>
+    <button id="continue-anyway" class="button">Continue Anyway</button>
+  </div>
+
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    <div id="score-display">Score: 0</div>
+    <div id="lives-display">Lives: 3</div>
+    <button id="pause-button">Pause</button>
+    
+    <div id="start-screen">
+      <h1 class="screen-title">CATch the food!</h1>
+      <p class="screen-subtitle">Help the cat catch falling food!<br>Move with mouse or touch.<br>Catch fish, cans and meat for points.<br>AVOID vegetables (you lose points) and chocolate (you lose a life)!</p>
+      <div class="button-container">
+        <button id="start-button" class="button">Start Game</button>
+        <button id="view-high-scores-button" class="button">High Scores</button>
+      </div>
+      
+      <!-- Performance option added to start screen -->
+      <div class="performance-toggle">
+        <label for="reduced-effects">Reduced Effects:</label>
+        <input type="checkbox" id="reduced-effects">
+        <span>(Recommended for older devices)</span>
+      </div>
+    </div>
+    
+    <div id="game-over-screen" style="display: none;">
+      <h1 class="screen-title">Game Over</h1>
+      <p id="final-score" class="screen-subtitle">Your score: 0</p>
+      <div class="button-container">
+        <button id="restart-button" class="button">Play Again</button>
+        <button id="save-score-button" class="button">Save Score</button>
+        <button id="view-scores-button" class="button">High Scores</button>
+      </div>
+    </div>
+    
+    <div id="high-scores-screen" style="display: none;">
+      <h1 class="screen-title">High Scores</h1>
+      <div class="high-scores-container">
+        <table class="high-scores-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Score</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="high-scores-list">
+            <!-- High scores will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+      <div id="new-high-score-input" class="name-input-container" style="display: none;">
+        <input type="text" id="player-name" class="name-input" placeholder="Enter your name" maxlength="15">
+        <button id="submit-score-button" class="button">Submit</button>
+      </div>
+      <button id="back-button" class="button">Back</button>
+    </div>
+    
+    <div id="pause-screen" style="display: none;">
+      <h1 class="screen-title">Game Paused</h1>
+      <p class="screen-subtitle">Take a break, the cat's waiting!</p>
+      <div class="button-container">
+        <button id="continue-button" class="button">Continue</button>
+        <button id="pause-view-scores-button" class="button">High Scores</button>
+        <button id="quit-button" class="button">Quit Game</button>
+      </div>
+      <!-- Audio controls in pause menu -->
+      <div class="audio-controls">
+        <button id="music-toggle" class="audio-control-button active">
+          <svg class="audio-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <!-- Music ON icon -->
+            <g class="music-on">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" fill="currentColor"/>
+            </g>
+            <!-- Music OFF icon (hidden by default) -->
+            <g class="music-off" style="display:none;">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" fill="currentColor" opacity="0.5"/>
+              <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </g>
+          </svg>
+          <span class="audio-label">MUSIC ON</span>
+        </button>
+        
+        <button id="sound-toggle" class="audio-control-button active">
+          <svg class="audio-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <!-- Sound ON icon -->
+            <g class="sound-on">
+              <path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/>
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" fill="currentColor"/>
+              <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/>
+            </g>
+            <!-- Sound OFF icon (hidden by default) -->
+            <g class="sound-off" style="display:none;">
+              <path d="M3 9v6h4l5 5V4L7 9H3z" fill="currentColor"/>
+              <line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </g>
+          </svg>
+          <span class="audio-label">SOUND ON</span>
+        </button>
+      </div>
+      
+      <!-- Performance toggle in pause menu -->
+      <div class="performance-toggle">
+        <label for="reduced-effects-pause">Reduced Effects:</label>
+        <input type="checkbox" id="reduced-effects-pause">
+        <span>(Improves performance)</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Game variables
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('start-screen');
+    const gameOverScreen = document.getElementById('game-over-screen');
+    const highScoresScreen = document.getElementById('high-scores-screen');
+    const pauseScreen = document.getElementById('pause-screen');
+    const orientationWarning = document.getElementById('orientation-warning');
+    const scoreDisplay = document.getElementById('score-display');
+    const livesDisplay = document.getElementById('lives-display');
+    const finalScore = document.getElementById('final-score');
+    const startButton = document.getElementById('start-button');
+    const restartButton = document.getElementById('restart-button');
+    const pauseButton = document.getElementById('pause-button');
+    const viewHighScoresButton = document.getElementById('view-high-scores-button');
+    const viewScoresButton = document.getElementById('view-scores-button');
+    const saveScoreButton = document.getElementById('save-score-button');
+    const backButton = document.getElementById('back-button');
+    const highScoresList = document.getElementById('high-scores-list');
+    const newHighScoreInput = document.getElementById('new-high-score-input');
+    const playerNameInput = document.getElementById('player-name');
+    const submitScoreButton = document.getElementById('submit-score-button');
+    const continueButton = document.getElementById('continue-button');
+    const pauseViewScoresButton = document.getElementById('pause-view-scores-button');
+    const quitButton = document.getElementById('quit-button');
+    const continueAnywayButton = document.getElementById('continue-anyway');
+    
+    // Performance options
+    const reducedEffectsToggle = document.getElementById('reduced-effects');
+    const reducedEffectsPauseToggle = document.getElementById('reduced-effects-pause');
+    
+    // Audio elements
+    const backgroundMusic = document.getElementById('background-music');
+    const loseLifeSound = document.getElementById('lose-life-sound');
+    const pauseSound = document.getElementById('pause-sound');
+    const unpauseSound = document.getElementById('unpause-sound');
+    const musicToggleButton = document.getElementById('music-toggle');
+    const soundToggleButton = document.getElementById('sound-toggle');
+    
+    // Audio state
+    let soundEnabled = true;
+    let musicEnabled = true;
+    let audioInitialized = false; // Track if audio has been initialized for iOS
+    let musicPlayAttempted = false; // Track if we've tried to play music
+    
+    // Game state
+    let gameActive = false;
+    let gamePaused = false;
+    let score = 0;
+    let lives = 9;
+    let foodItems = [];
+    let backgroundElements = [];
+    let lastFrameTime = 0;
+    let foodSpawnTimer = 0;
+    let foodSpawnInterval = 1000; // milliseconds
+    let gameSpeed = 1;
+    let gameTime = 0; // Track game time in milliseconds
+    let currentScoreId = null; // To track the current score in the high score list
+    let reducedEffects = false; // Performance option
+    let isMobile = false; // Track if on mobile device
+    
+    // Detect mobile devices
+    function detectMobile() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+             window.innerWidth <= 768;
+    }
+    
+    // In-memory storage for high scores (fallback when localStorage is unavailable)
+    let inMemoryHighScores = [];
+    
+    // Check if localStorage is available
+    function isLocalStorageAvailable() {
+      try {
+        const test = '__storage_test__';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    // Cat player
+    const cat = {
+      x: 0,
+      y: 0,
+      width: 160,  // Doubled from 80
+      height: 120, // Doubled from 60
+      speed: 400,
+      image: new Image()
+    };
+    
+    // Create detailed cat SVG
+    const catSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 80">
+      <!-- Shadow -->
+      <ellipse cx="50" cy="73" rx="25" ry="5" fill="rgba(0,0,0,0.2)"/>
+      
+      <!-- Tail -->
+      <path d="M75 45c10 -8 15 -5 20 -15 -8 0 -12 -5 -14 -10 -8 10 -8 15 -6 25z" fill="#f39c12" stroke="#e67e22" stroke-width="1.5"/>
+      
+      <!-- Back legs -->
+      <path d="M35 60c-3 5 -3 12 -1 15 2 0 4 -1 5 -3 1 5 5 5 7 3 0 -5 -3 -15 -11 -15z" fill="#f39c12" stroke="#e67e22" stroke-width="1"/>
+      <path d="M65 60c3 5 3 12 1 15 -2 0 -4 -1 -5 -3 -1 5 -5 5 -7 3 0 -5 3 -15 11 -15z" fill="#f39c12" stroke="#e67e22" stroke-width="1"/>
+      
+      <!-- Body -->
+      <ellipse cx="50" cy="45" rx="20" ry="15" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+      
+      <!-- Front legs -->
+      <path d="M40 52c-2 5 -2 10 0 13 1 0 3 -1 4 -3 0 4 3 4 5 2 0 -4 -2 -12 -9 -12z" fill="#f39c12" stroke="#e67e22" stroke-width="1"/>
+      <path d="M60 52c2 5 2 10 0 13 -1 0 -3 -1 -4 -3 0 4 -3 4 -5 2 0 -4 2 -12 9 -12z" fill="#f39c12" stroke="#e67e22" stroke-width="1"/>
+      
+      <!-- Fur tufts on body -->
+      <path d="M45 35c-3 -3 -8 -2 -10 1M55 35c3 -3 8 -2 10 1" fill="none" stroke="#e67e22" stroke-width="1.5" stroke-linecap="round"/>
+      
+      <!-- Chest/belly patch -->
+      <ellipse cx="50" cy="48" rx="8" ry="6" fill="#fedfad" stroke="#e67e22" stroke-width="0.5"/>
+      
+      <!-- Head -->
+      <circle cx="50" cy="25" r="15" fill="#f39c12" stroke="#e67e22" stroke-width="2"/>
+      
+      <!-- Ears -->
+      <path d="M38 15l-8-10 3 12z" fill="#f39c12" stroke="#e67e22" stroke-width="1.5"/>
+      <path d="M62 15l8-10-3 12z" fill="#f39c12" stroke="#e67e22" stroke-width="1.5"/>
+      <path d="M35 12l-4-5 1.5 6z" fill="#fedfad" stroke="#fedfad" stroke-width="0.5"/>
+      <path d="M65 12l4-5-1.5 6z" fill="#fedfad" stroke="#fedfad" stroke-width="0.5"/>
+      
+      <!-- Eyes -->
+      <ellipse cx="43" cy="22" rx="4" ry="4.5" fill="#fff" stroke="#000" stroke-width="0.5"/>
+      <ellipse cx="57" cy="22" rx="4" ry="4.5" fill="#fff" stroke="#000" stroke-width="0.5"/>
+      
+      <!-- Pupils with reflection -->
+      <ellipse cx="43" cy="22" rx="2" ry="4" fill="#000"/>
+      <ellipse cx="57" cy="22" rx="2" ry="4" fill="#000"/>
+      <circle cx="42" cy="20" r="1" fill="#fff"/>
+      <circle cx="56" cy="20" r="1" fill="#fff"/>
+      
+      <!-- Nose -->
+      <path d="M50 27l-2 2h4z" fill="#e74c3c"/>
+      
+      <!-- Mouth -->
+      <path d="M50 31c-2 2 -6 2 -8 1M50 31c2 2 6 2 8 1" fill="none" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+      
+      <!-- Whiskers -->
+      <path d="M41 29h-12M41 31h-10M59 29h12M59 31h10" fill="none" stroke="#000" stroke-width="0.75" stroke-linecap="round"/>
+      
+      <!-- Fur tufts -->
+      <path d="M40 17c-2 -2 -4 -1 -5 0M60 17c2 -2 4 -1 5 0" fill="none" stroke="#e67e22" stroke-width="1" stroke-linecap="round"/>
+    </svg>`;
+    
+    cat.image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(catSVG);
+    
+    // Food items images
+    const foodImages = [
+      createFishSVG(),
+      createCanSVG(),
+      createMeatSVG(),
+      createVegetableSVG(),  // Avoid this - negative points
+      createChocolateSVG()   // Avoid this - lose a life
+    ];
+    
+    function createFishSVG() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
+        <path d="M35 15c0 6-16 12-25 10-3 3-5 3-7 3 2-2 2-4 2-6-3-2-3-7 0-9 0-2 0-4-2-6 2 0 4 0 7 3 9-2 25 4 25 10z" fill="#80d0f0" stroke="#207090" stroke-width="1.5"/>
+        <circle cx="28" cy="12" r="2" fill="#207090"/>
+        <path d="M13 10l-3 5 3 5" fill="none" stroke="#207090" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M10 10l-3 5 3 5" fill="none" stroke="#207090" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>`;
+      
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      return img;
+    }
+    
+    function createCanSVG() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
+        <rect x="10" y="5" width="20" height="20" rx="2" fill="#d95e40" stroke="#7a331f" stroke-width="1.5"/>
+        <ellipse cx="20" cy="5" rx="10" ry="2" fill="#e6ac9a" stroke="#7a331f" stroke-width="1.5"/>
+        <ellipse cx="20" cy="25" rx="10" ry="2" fill="#a13c2a" stroke="#7a331f" stroke-width="1.5"/>
+        <path d="M15 12h10M15 16h10" stroke="#7a331f" stroke-width="1.5" stroke-linecap="round"/>
+        <text x="20" y="20" font-size="5" text-anchor="middle" fill="#f0d0a0">CAT</text>
+      </svg>`;
+      
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      return img;
+    }
+    
+    function createMeatSVG() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
+        <path d="M10 10c0-2 4-4 10-4s10 2 10 4c3 2 2 8 0 10-2 3-18 3-20 0-2-2-3-8 0-10z" fill="#e69370" stroke="#8b4513" stroke-width="1.5"/>
+        <path d="M15 10c0-1 2-2 5-2s5 1 5 2" fill="none" stroke="#8b4513" stroke-width="1" stroke-linecap="round"/>
+        <ellipse cx="15" cy="13" rx="2" ry="1" fill="#b05030"/>
+        <ellipse cx="25" cy="13" rx="2" ry="1" fill="#b05030"/>
+        <ellipse cx="20" cy="18" rx="3" ry="2" fill="#b05030"/>
+      </svg>`;
+      
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      return img;
+    }
+    
+    function createVegetableSVG() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
+        <!-- Broccoli - cats don't like vegetables -->
+        <path d="M20 25c0 0 -2 -5 -2 -10 0 -5 2 -10 2 -10" fill="none" stroke="#5d8c3f" stroke-width="2"/>
+        <path d="M15 8c0 0 5 -3 10 0" fill="none" stroke="#5d8c3f" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="15" cy="8" r="4" fill="#63a242" stroke="#5d8c3f" stroke-width="1"/>
+        <circle cx="20" cy="5" r="4" fill="#63a242" stroke="#5d8c3f" stroke-width="1"/>
+        <circle cx="25" cy="8" r="4" fill="#63a242" stroke="#5d8c3f" stroke-width="1"/>
+        <text x="20" cy="18" font-size="3" text-anchor="middle" fill="#fff">AVOID</text>
+      </svg>`;
+      
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      return img;
+    }
+    
+    function createChocolateSVG() {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 30">
+        <!-- Chocolate - toxic to cats -->
+        <rect x="10" y="8" width="20" height="14" rx="1" fill="#5c3317" stroke="#3c2210" stroke-width="1"/>
+        <line x1="14" y1="8" x2="14" y2="22" stroke="#3c2210" stroke-width="1"/>
+        <line x1="18" y1="8" x2="18" y2="22" stroke="#3c2210" stroke-width="1"/>
+        <line x1="22" y1="8" x2="22" y2="22" stroke="#3c2210" stroke-width="1"/>
+        <line x1="26" y1="8" x2="26" y2="22" stroke="#3c2210" stroke-width="1"/>
+        <line x1="10" y1="12" x2="30" y2="12" stroke="#3c2210" stroke-width="1"/>
+        <line x1="10" y1="16" x2="30" y2="16" stroke="#3c2210" stroke-width="1"/>
+        <path d="M10 8l5 -4h10l5 4" fill="#5c3317" stroke="#3c2210" stroke-width="1"/>
+        <text x="20" y="14" font-size="3" text-anchor="middle" fill="#fff">DANGER</text>
+      </svg>`;
+      
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      return img;
+    }
+    
+    // Check device orientation
+    function checkOrientation() {
+      if (isMobile) {
+        // Only show warning on mobile devices
+        const isPortrait = window.innerHeight > window.innerWidth;
+        orientationWarning.style.display = isPortrait ? 'flex' : 'none';
+        
+        if (!isPortrait && orientationWarning.style.display === 'none') {
+          // If was in portrait and now in landscape, resume game if it was active
+          if (gameActive && gamePaused) {
+            togglePause();
+          }
+        }
+      } else {
+        orientationWarning.style.display = 'none';
+      }
+    }
+    
+    // High score management functions with localStorage fallback
+    function getHighScores() {
+      if (isLocalStorageAvailable()) {
+        const scores = localStorage.getItem('catGameHighScores');
+        return scores ? JSON.parse(scores) : [];
+      } else {
+        return inMemoryHighScores;
+      }
+    }
+    
+    function saveHighScore(playerName, playerScore) {
+      const highScores = getHighScores();
+      
+      // Generate a unique ID for this score
+      const scoreId = Date.now().toString();
+      currentScoreId = scoreId;
+      
+      // Add new score
+      highScores.push({
+        id: scoreId,
+        name: playerName,
+        score: playerScore,
+        date: new Date().toLocaleDateString()
+      });
+      
+      // Sort high scores (highest first)
+      highScores.sort((a, b) => b.score - a.score);
+      
+      // Keep only top 10
+      if (highScores.length > 10) {
+        highScores.length = 10;
+      }
+      
+      // Save scores
+      if (isLocalStorageAvailable()) {
+        try {
+          localStorage.setItem('catGameHighScores', JSON.stringify(highScores));
+        } catch (e) {
+          console.log("Could not save to localStorage:", e);
+        }
+      } else {
+        inMemoryHighScores = highScores;
+      }
+      
+      // Update the display
+      displayHighScores();
+    }
+    
+    function displayHighScores() {
+      const highScores = getHighScores();
+      
+      highScoresList.innerHTML = '';
+      
+      if (highScores.length === 0) {
+        highScoresList.innerHTML = '<tr><td colspan="4" style="text-align: center;">No high scores yet!</td></tr>';
+        return;
+      }
+      
+      highScores.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        
+        // Highlight the current score
+        if (entry.id === currentScoreId) {
+          row.className = 'current-score';
+        }
+        
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${entry.name}</td>
+          <td>${entry.score}</td>
+          <td>${entry.date}</td>
+        `;
+        
+        highScoresList.appendChild(row);
+      });
+    }
+    
+    function isHighScore(playerScore) {
+      const highScores = getHighScores();
+      
+      // If we have less than 10 scores, any score qualifies
+      if (highScores.length < 10) {
+        return true;
+      }
+      
+      // Otherwise, check if this score beats the lowest score
+      return playerScore > highScores[highScores.length - 1].score;
+    }
+    
+    function showHighScoresScreen(isNewScore = false) {
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      highScoresScreen.style.display = 'flex';
+      pauseScreen.style.display = 'none';
+      
+      // Show or hide the name input based on whether this is a new high score
+      newHighScoreInput.style.display = isNewScore ? 'block' : 'none';
+      
+      // Display current high scores
+      displayHighScores();
+      
+      // Focus the name input if it's visible
+      if (isNewScore) {
+        playerNameInput.focus();
+      }
+    }
+    
+    // Initialize game
+    function init() {
+      // Set canvas size
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      // Position cat at bottom center
+      cat.x = canvas.width / 2 - cat.width / 2;
+      cat.y = canvas.height - cat.height - 20;
+      
+      // Create background elements
+      createBackgroundElements();
+      
+      // Reset game state
+      score = 0;
+      lives = 9;
+      foodItems = [];
+      gameSpeed = 1;
+      foodSpawnInterval = 1000;
+      gameTime = 0;
+      currentScoreId = null;
+      updateScoreDisplay();
+      updateLivesDisplay();
+      
+      // Sync reduced effects checkboxes
+      syncReducedEffectsToggles();
+    }
+    
+    // Sync the reduced effects toggles between pause and start screens
+    function syncReducedEffectsToggles() {
+      reducedEffectsPauseToggle.checked = reducedEffects;
+      reducedEffectsToggle.checked = reducedEffects;
+    }
+    
+    function createBackgroundElements() {
+      // Clear previous elements
+      backgroundElements = [];
+      
+      // If reduced effects, create fewer background elements
+      const density = reducedEffects ? 50000 : 25000;
+      
+      // Add cat-themed elements (paw prints, yarn balls, etc.)
+      const numElements = Math.floor(canvas.width * canvas.height / density);
+      
+      for (let i = 0; i < numElements; i++) {
+        const type = Math.floor(Math.random() * 3); // 0: paw print, 1: yarn ball, 2: mouse
+        backgroundElements.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 20 + 10,
+          rotation: Math.random() * Math.PI * 2,
+          type: type,
+          opacity: Math.random() * 0.2 + 0.05
+        });
+      }
+    }
+    
+    // Initialize audio for iOS
+    function initializeAudio() {
+      if (audioInitialized) return true;
+      
+      try {
+        // Create and play a silent sound to unlock audio on iOS
+        const silentSound = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjM1LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADQgD///////////////////////////////////////////8AAAA8TEFNRTMuMTAwAQAAAAAAAAAAABQgJAMGQQABmgAAA0IAAGQCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//sQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=");
+        silentSound.play().catch(e => {
+          console.log("Silent sound error:", e);
+          return false;
+        });
+        
+        // Try to prime all audio elements
+        backgroundMusic.load();
+        loseLifeSound.load();
+        pauseSound.load();
+        unpauseSound.load();
+        
+        audioInitialized = true;
+        return true;
+      } catch (e) {
+        console.log("Audio initialization error:", e);
+        return false;
+      }
+    }
+    
+    // Game loop
+    function gameLoop(timestamp) {
+      if (!gameActive || gamePaused) return;
+      
+      // Calculate delta time (time since last frame)
+      const deltaTime = timestamp - lastFrameTime;
+      lastFrameTime = timestamp;
+      
+      // Update game time
+      gameTime += deltaTime;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw background with gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#faf8f1');  // Light cream
+      gradient.addColorStop(1, '#f6e6cb');  // Warm light tan
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw background elements
+      drawBackgroundElements();
+      
+      // Draw cat
+      ctx.drawImage(cat.image, cat.x, cat.y, cat.width, cat.height);
+      
+      // Spawn food
+      foodSpawnTimer += deltaTime;
+      if (foodSpawnTimer >= foodSpawnInterval) {
+        spawnFood();
+        foodSpawnTimer = 0;
+        
+        // Gradually increase game speed and spawn rate based on time
+        gameSpeed = 1 + (gameTime / 60000) * 0.5; // Increase by 0.5 every minute
+        foodSpawnInterval = Math.max(300, 1000 - (gameTime / 10000) * 100); // Decrease spawn interval over time
+      }
+      
+      // Update and draw food
+      updateFood(deltaTime);
+      
+      // Request next frame
+      requestAnimationFrame(gameLoop);
+    }
+    
+    function drawBackgroundElements() {
+      for (const element of backgroundElements) {
+        ctx.save();
+        ctx.globalAlpha = element.opacity;
+        ctx.translate(element.x, element.y);
+        ctx.rotate(element.rotation);
+        
+        if (element.type === 0) {
+          // Draw paw print
+          drawPawPrint(0, 0, element.size);
+        } else if (element.type === 1) {
+          // Draw yarn ball
+          drawYarnBall(0, 0, element.size);
+        } else if (element.type === 2) {
+          // Draw mouse
+          drawMouse(0, 0, element.size);
+        }
+        
+        ctx.restore();
+      }
+    }
+    
+    function drawPawPrint(x, y, size) {
+      ctx.fillStyle = '#e6d2c0';
+      
+      // Main pad
+      ctx.beginPath();
+      ctx.ellipse(x, y, size * 0.6, size * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Toe pads
+      for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI / 2) + Math.PI / 4;
+        const padX = x + Math.cos(angle) * size * 0.7;
+        const padY = y + Math.sin(angle) * size * 0.7;
+        
+        ctx.beginPath();
+        ctx.ellipse(padX, padY, size * 0.3, size * 0.25, angle, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    function drawYarnBall(x, y, size) {
+      ctx.fillStyle = '#e9967a';
+      
+      // Ball
+      ctx.beginPath();
+      ctx.arc(x, y, size * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Yarn details
+      ctx.strokeStyle = '#d18063';
+      ctx.lineWidth = size * 0.1;
+      
+      for (let i = 0; i < 3; i++) {
+        const angle = i * Math.PI / 3;
+        ctx.beginPath();
+        ctx.arc(x, y, size * 0.4, angle, angle + Math.PI);
+        ctx.stroke();
+      }
+    }
+    
+    function drawMouse(x, y, size) {
+      ctx.fillStyle = '#aaa';
+      
+      // Mouse body
+      ctx.beginPath();
+      ctx.ellipse(x, y, size * 0.8, size * 0.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Head
+      ctx.beginPath();
+      ctx.arc(x + size * 0.7, y, size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ears
+      ctx.beginPath();
+      ctx.ellipse(x + size * 0.7 - size * 0.2, y - size * 0.3, size * 0.2, size * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.ellipse(x + size * 0.7 + size * 0.2, y - size * 0.3, size * 0.2, size * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Tail
+      ctx.strokeStyle = '#aaa';
+      ctx.lineWidth = size * 0.15;
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.7, y);
+      ctx.bezierCurveTo(
+        x - size * 1.2, y - size * 0.5,
+        x - size * 1.5, y + size * 0.5,
+        x - size * 1.8, y
+      );
+      ctx.stroke();
+    }
+    
+    function spawnFood() {
+      const size = Math.random() * 20 + 60; // Doubled size (was 10-40, now 20-80)
+      const x = Math.random() * (canvas.width - size);
+      
+      // Weighted item type selection 
+      // Types 0-2: Good food (70% chance)
+      // Type 3: Vegetable - avoid (20% chance)
+      // Type 4: Chocolate - danger (10% chance)
+      let type;
+      const rand = Math.random();
+      if (rand < 0.7) {
+        // Good food
+        type = Math.floor(Math.random() * 3); // 0, 1, or 2
+      } else if (rand < 0.9) {
+        // Vegetable - avoid
+        type = 3;
+      } else {
+        // Chocolate - danger
+        type = 4;
+      }
+      
+      const points = [10, 20, 30, -15, 0][type]; // Negative points for vegetables
+      
+      foodItems.push({
+        x,
+        y: -size,
+        width: size,
+        height: size,
+        speed: (Math.random() * 100 + 150) * gameSpeed,
+        type,
+        points,
+        rotation: Math.random() * 0.2 - 0.1,
+        rotationSpeed: (Math.random() * 0.02 - 0.01),
+        isDangerous: type === 4 // Chocolate is dangerous
+      });
+    }
+    
+    function updateFood(deltaTime) {
+      const secondsPassed = deltaTime / 1000;
+      
+      for (let i = foodItems.length - 1; i >= 0; i--) {
+        const food = foodItems[i];
+        
+        // Move food down
+        food.y += food.speed * secondsPassed;
+        
+        // Apply rotation for added visual interest
+        food.rotation += food.rotationSpeed;
+        
+        // Draw food with rotation
+        ctx.save();
+        ctx.translate(food.x + food.width/2, food.y + food.height/2);
+        ctx.rotate(food.rotation);
+        ctx.drawImage(
+          foodImages[food.type], 
+          -food.width/2, 
+          -food.height/2, 
+          food.width, 
+          food.height
+        );
+        ctx.restore();
+        
+        // Check for collision with cat
+        if (
+          food.x < cat.x + cat.width &&
+          food.x + food.width > cat.x &&
+          food.y < cat.y + cat.height &&
+          food.y + food.height > cat.y
+        ) {
+          // Caught food or obstacle
+          foodItems.splice(i, 1);
+          
+          if (food.isDangerous) {
+            // Caught chocolate (dangerous) - lose a life
+            lives--;
+            updateLivesDisplay();
+            // Play angry meow sound
+            playSound(loseLifeSound);
+            
+            if (!reducedEffects) {
+              createNegativeEffect(food.x + food.width/2, food.y + food.height/2);
+            }
+            
+            if (lives <= 0) {
+              endGame();
+            }
+          } else {
+            // Normal food or vegetable
+            score += food.points;
+            updateScoreDisplay();
+            
+            if (!reducedEffects) {
+              if (food.points > 0) {
+                // Good food
+                createCatchEffect(food.x + food.width/2, food.y + food.height/2);
+              } else {
+                // Bad food (vegetable)
+                createNegativeEffect(food.x + food.width/2, food.y + food.height/2);
+              }
+            }
+          }
+          
+          continue;
+        }
+        
+        // Check if food passed bottom of screen
+        if (food.y > canvas.height) {
+          foodItems.splice(i, 1);
+          
+          // Only lose a life if it was good food that was missed
+          if (food.type < 3) {
+            lives--;
+            updateLivesDisplay();
+            // Play angry meow sound
+            playSound(loseLifeSound);
+            
+            if (lives <= 0) {
+              endGame();
+            }
+          }
+        }
+      }
+    }
+    
+    function createNegativeEffect(x, y) {
+      // Skip if reduced effects is enabled
+      if (reducedEffects) return;
+      
+      // Create a red X effect for negative outcomes
+      const particles = [];
+      const numParticles = 15;
+      
+      for (let i = 0; i < numParticles; i++) {
+        const angle = (i / numParticles) * Math.PI * 2;
+        const speed = Math.random() * 3 + 2;
+        
+        particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 5 + 3,
+          color: '#ff3333',
+          life: 1.0
+        });
+      }
+      
+      // Create an animation function
+      function animateParticles() {
+        let hasActiveParticles = false;
+        
+        for (const p of particles) {
+          if (p.life > 0) {
+            hasActiveParticles = true;
+            
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.03;
+            
+            if (gameActive && !gamePaused) {
+              ctx.fillStyle = p.color;
+              ctx.globalAlpha = p.life;
+              ctx.beginPath();
+              const radius = Math.max(0.1, p.size * p.life);
+              ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.globalAlpha = 1;
+            }
+          }
+        }
+        
+        if (hasActiveParticles && gameActive && !reducedEffects) {
+          requestAnimationFrame(animateParticles);
+        }
+      }
+      
+      // Draw X mark immediately
+      ctx.strokeStyle = '#ff3333';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x - 15, y - 15);
+      ctx.lineTo(x + 15, y + 15);
+      ctx.moveTo(x + 15, y - 15);
+      ctx.lineTo(x - 15, y + 15);
+      ctx.stroke();
+      
+      animateParticles();
+    }
+    
+    function createCatchEffect(x, y) {
+      // Skip if reduced effects is enabled
+      if (reducedEffects) return;
+      
+      // Create a simple particle effect when food is caught
+      const particles = [];
+      const numParticles = 10;
+      
+      for (let i = 0; i < numParticles; i++) {
+        const angle = (i / numParticles) * Math.PI * 2;
+        const speed = Math.random() * 2 + 1;
+        
+        particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          size: Math.random() * 5 + 3,
+          color: '#ffcc00',
+          life: 1.0 // life from 1.0 to 0.0
+        });
+      }
+      
+      // Create an animation function
+      function animateParticles() {
+        let hasActiveParticles = false;
+        
+        for (const p of particles) {
+          if (p.life > 0) {
+            hasActiveParticles = true;
+            
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.03;
+            
+            if (gameActive && !gamePaused) {
+              ctx.fillStyle = p.color;
+              ctx.globalAlpha = p.life;
+              ctx.beginPath();
+              // Ensure radius is always positive
+              const radius = Math.max(0.1, p.size * p.life);
+              ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.globalAlpha = 1;
+            }
+          }
+        }
+        
+        if (hasActiveParticles && gameActive && !reducedEffects) {
+          requestAnimationFrame(animateParticles);
+        }
+      }
+      
+      animateParticles();
+    }
+    
+    function updateScoreDisplay() {
+      scoreDisplay.textContent = `Score: ${score}`;
+    }
+    
+    function updateLivesDisplay() {
+      livesDisplay.textContent = `Lives: ${lives}`;
+    }
+    
+    // FIXED: More reliable background music starting
+    function startGame() {
+      // Force initialize audio
+      initializeAudio();
+      
+      gameActive = true;
+      gamePaused = false;
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      highScoresScreen.style.display = 'none';
+      pauseScreen.style.display = 'none';
+      
+      // Check orientation before starting
+      if (isMobile) {
+        checkOrientation();
+      }
+      
+      // More aggressive attempt to start background music
+      if (musicEnabled) {
+        // Try to start the music directly - this works better on first start
+        try {
+          backgroundMusic.currentTime = 0; // Reset to beginning
+          const playPromise = backgroundMusic.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              console.log("Music started successfully");
+              musicPlayAttempted = true;
+            }).catch(e => {
+              console.log("Music start error:", e);
+              // We'll try again with user interaction
+              musicPlayAttempted = false;
+            });
+          }
+        } catch (e) {
+          console.log("Error starting music:", e);
+        }
+      }
+      
+      lastFrameTime = performance.now();
+      requestAnimationFrame(gameLoop);
+    }
+    
+    function endGame() {
+      gameActive = false;
+      backgroundMusic.pause();
+      finalScore.textContent = `Your score: ${score}`;
+      gameOverScreen.style.display = 'flex';
+      
+      // Enable/disable save score button based on whether this is a high score
+      saveScoreButton.disabled = !isHighScore(score);
+      if (isHighScore(score)) {
+        saveScoreButton.textContent = "Save High Score!";
+        saveScoreButton.style.backgroundColor = "#ff9933";
+      } else {
+        saveScoreButton.textContent = "Save Score";
+        saveScoreButton.style.backgroundColor = "#ff6600";
+      }
+    }
+    
+    // Audio functions
+    function playSound(sound) {
+      if (soundEnabled && audioInitialized) {
+        sound.currentTime = 0;
+        sound.play().catch(e => console.log("Audio play error:", e));
+      }
+    }
+    
+    // FIXED: More reliable background music updating
+    function updateBackgroundMusic() {
+      if (musicEnabled && gameActive && !gamePaused) {
+        // Only try to play if we haven't already tried or if we're unpausing
+        if (!musicPlayAttempted || gamePaused === false) {
+          backgroundMusic.play().then(() => {
+            musicPlayAttempted = true;
+            audioInitialized = true;
+          }).catch(e => {
+            console.log("Background music error:", e);
+          });
+        }
+      } else {
+        backgroundMusic.pause();
+      }
+    }
+    
+    // Safe localStorage setters/getters with memory fallback
+    function getStoredPreference(key, defaultValue) {
+      if (isLocalStorageAvailable()) {
+        try {
+          const value = localStorage.getItem(key);
+          return value !== null ? value === 'true' : defaultValue;
+        } catch (e) {
+          return defaultValue;
+        }
+      }
+      return defaultValue;
+    }
+    
+    function setStoredPreference(key, value) {
+      if (isLocalStorageAvailable()) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (e) {
+          console.log("Could not save preference:", e);
+        }
+      }
+    }
+    
+    // New function to update audio control buttons
+    function updateAudioControls() {
+      const musicButton = document.getElementById('music-toggle');
+      const soundButton = document.getElementById('sound-toggle');
+      
+      // Update music button
+      if (musicEnabled) {
+        musicButton.classList.remove('inactive');
+        musicButton.classList.add('active');
+        musicButton.querySelector('.audio-label').textContent = 'MUSIC ON';
+        musicButton.querySelector('.music-on').style.display = 'block';
+        musicButton.querySelector('.music-off').style.display = 'none';
+      } else {
+        musicButton.classList.remove('active');
+        musicButton.classList.add('inactive');
+        musicButton.querySelector('.audio-label').textContent = 'MUSIC OFF';
+        musicButton.querySelector('.music-on').style.display = 'none';
+        musicButton.querySelector('.music-off').style.display = 'block';
+      }
+      
+      // Update sound button
+      if (soundEnabled) {
+        soundButton.classList.remove('inactive');
+        soundButton.classList.add('active');
+        soundButton.querySelector('.audio-label').textContent = 'SOUND ON';
+        soundButton.querySelector('.sound-on').style.display = 'block';
+        soundButton.querySelector('.sound-off').style.display = 'none';
+      } else {
+        soundButton.classList.remove('active');
+        soundButton.classList.add('inactive');
+        soundButton.querySelector('.audio-label').textContent = 'SOUND OFF';
+        soundButton.querySelector('.sound-on').style.display = 'none';
+        soundButton.querySelector('.sound-off').style.display = 'block';
+      }
+    }
+    
+    // Updated audio toggle functions with better audio handling
+    function toggleMusic() {
+      musicEnabled = !musicEnabled;
+      
+      if (musicEnabled && gameActive && !gamePaused) {
+        // If turning music on during active game, try to start it directly
+        backgroundMusic.play().then(() => {
+          musicPlayAttempted = true;
+          audioInitialized = true;
+        }).catch(e => console.log("Toggle music error:", e));
+      } else {
+        backgroundMusic.pause();
+      }
+      
+      updateAudioControls();
+      
+      // Save preference
+      setStoredPreference('catGameMusicEnabled', musicEnabled);
+    }
+    
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      updateAudioControls();
+      
+      // Save preference
+      setStoredPreference('catGameSoundEnabled', soundEnabled);
+    }
+    
+    // Toggle reduced effects
+    function toggleReducedEffects(checkbox) {
+      reducedEffects = checkbox.checked;
+      // Set the other checkbox to match
+      if (checkbox === reducedEffectsToggle) {
+        reducedEffectsPauseToggle.checked = reducedEffects;
+      } else {
+        reducedEffectsToggle.checked = reducedEffects;
+      }
+      
+      // Save preference
+      setStoredPreference('catGameReducedEffects', reducedEffects);
+      
+      // Regenerate background elements with new density
+      createBackgroundElements();
+    }
+    
+    function togglePause() {
+      if (!gameActive) return;
+      
+      gamePaused = !gamePaused;
+      pauseButton.textContent = gamePaused ? 'Resume' : 'Pause';
+      
+      if (gamePaused) {
+        // Play pause sound
+        playSound(pauseSound);
+        // Pause background music
+        backgroundMusic.pause();
+        // Show pause screen
+        pauseScreen.style.display = 'flex';
+      } else {
+        // Play unpause sound
+        playSound(unpauseSound);
+        // Resume background music if enabled
+        updateBackgroundMusic();
+        // Hide pause screen
+        pauseScreen.style.display = 'none';
+        lastFrameTime = performance.now();
+        requestAnimationFrame(gameLoop);
+      }
+    }
+    
+    // Add ESC key listener for pause
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && gameActive) {
+        togglePause();
+      }
+    });
+    
+    // Handle mouse/touch input - improved to work without clicking/dragging
+    canvas.addEventListener('mousemove', (e) => {
+      if (!gameActive || gamePaused) return;
+      moveCat(e.clientX);
+    });
+    
+    // For touch devices
+    canvas.addEventListener('touchmove', (e) => {
+      if (!gameActive || gamePaused) return;
+      e.preventDefault();
+      moveCat(e.touches[0].clientX);
+    });
+    
+    function moveCat(x) {
+      cat.x = Math.max(0, Math.min(canvas.width - cat.width, x - cat.width / 2));
+    }
+    
+    // Handle touch and click events for all screens to initialize audio
+    document.addEventListener('touchstart', function firstTouch() {
+      initializeAudio();
+      document.removeEventListener('touchstart', firstTouch);
+    });
+    
+    document.addEventListener('click', function firstClick() {
+      initializeAudio();
+      document.removeEventListener('click', firstClick);
+    });
+    
+    // Handle buttons - UPDATED for Start Game with fresh state
+    startButton.addEventListener('click', () => {
+      // Make sure we start with a fresh game state
+      init();
+      startGame();
+    });
+    
+    restartButton.addEventListener('click', () => {
+      init();
+      startGame();
+    });
+    
+    pauseButton.addEventListener('click', togglePause);
+    viewHighScoresButton.addEventListener('click', () => showHighScoresScreen(false));
+    viewScoresButton.addEventListener('click', () => showHighScoresScreen(false));
+    saveScoreButton.addEventListener('click', () => showHighScoresScreen(true));
+    
+    // Updated audio control button listeners with better initialization
+    musicToggleButton.addEventListener('click', () => {
+      toggleMusic();
+      audioInitialized = true;
+      
+      // If turning on music, force it to play
+      if (musicEnabled && gameActive && !gamePaused) {
+        backgroundMusic.play().catch(e => console.log("Music toggle error:", e));
+      }
+    });
+    
+    soundToggleButton.addEventListener('click', toggleSound);
+    
+    // Performance option listeners
+    reducedEffectsToggle.addEventListener('change', () => toggleReducedEffects(reducedEffectsToggle));
+    reducedEffectsPauseToggle.addEventListener('change', () => toggleReducedEffects(reducedEffectsPauseToggle));
+    
+    // Continue anyway button for orientation warning
+    continueAnywayButton.addEventListener('click', () => {
+      orientationWarning.style.display = 'none';
+      // If we were in a game, resume it
+      if (gameActive && gamePaused) {
+        togglePause();
+      }
+    });
+    
+    // Pause screen buttons
+    continueButton.addEventListener('click', () => {
+      togglePause(); // This will resume the game
+    });
+    
+    pauseViewScoresButton.addEventListener('click', () => {
+      pauseScreen.style.display = 'none';
+      showHighScoresScreen(false);
+    });
+    
+    // UPDATED Quit Game button event listener
+    quitButton.addEventListener('click', () => {
+      // Properly terminate the game
+      gamePaused = false;
+      gameActive = false;
+      
+      // Reset the game state
+      init();
+      
+      // Clear any remaining food items
+      foodItems = [];
+      
+      // Stop the music
+      backgroundMusic.pause();
+      
+      // Switch to start screen
+      pauseScreen.style.display = 'none';
+      startScreen.style.display = 'flex';
+    });
+    
+    backButton.addEventListener('click', () => {
+      highScoresScreen.style.display = 'none';
+      if (gameActive) {
+        if (gamePaused) {
+          // Return to pause screen if game was paused
+          pauseScreen.style.display = 'flex';
+        } else {
+          // Game was temporarily paused to view scores, resume
+          gamePaused = false;
+          lastFrameTime = performance.now();
+          requestAnimationFrame(gameLoop);
+        }
+      } else if (gameOverScreen.style.display === 'flex') {
+        // Return to game over screen
+        gameOverScreen.style.display = 'flex';
+      } else {
+        // Return to start screen
+        startScreen.style.display = 'flex';
+      }
+    });
+    
+    // Handle name submission
+    submitScoreButton.addEventListener('click', () => {
+      const playerName = playerNameInput.value.trim() || 'Anonymous Cat';
+      saveHighScore(playerName, score);
+      newHighScoreInput.style.display = 'none';
+    });
+    
+    // Allow pressing Enter to submit name
+    playerNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        submitScoreButton.click();
+      }
+    });
+    
+    // MODIFIED: Initialize game on load with better audio handling
+    window.addEventListener('load', () => {
+      // Check if we're on a mobile device
+      isMobile = detectMobile();
+      
+      // Load preferences using the safer method
+      musicEnabled = getStoredPreference('catGameMusicEnabled', true);
+      soundEnabled = getStoredPreference('catGameSoundEnabled', true);
+      reducedEffects = getStoredPreference('catGameReducedEffects', isMobile); // Default to reduced effects on mobile
+      
+      // Initialize the game
+      init();
+      
+      // Set up audio buttons initial state using the new function
+      updateAudioControls();
+      
+      // Check orientation initially
+      checkOrientation();
+      
+      // Preload sounds more effectively
+      backgroundMusic.load();
+      loseLifeSound.load();
+      pauseSound.load();
+      unpauseSound.load();
+      
+      // Add a global click listener to aid in audio initialization
+      document.addEventListener('click', function globalInitClick() {
+        // Try to initialize audio
+        if (!audioInitialized) {
+          initializeAudio();
+        }
+        
+        // If game is active and music should be playing, try again
+        if (gameActive && musicEnabled && !gamePaused && !musicPlayAttempted) {
+          backgroundMusic.play()
+            .then(() => {
+              audioInitialized = true;
+              musicPlayAttempted = true;
+            })
+            .catch(e => console.log("Click init music error:", e));
+        }
+      });
+    });
+    
+    // Handle window resize and orientation change
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cat.y = canvas.height - cat.height - 20;
+      createBackgroundElements();
+      checkOrientation();
+    });
+    
+    window.addEventListener('orientationchange', checkOrientation);
+  </script>
+</body>
+</html>
