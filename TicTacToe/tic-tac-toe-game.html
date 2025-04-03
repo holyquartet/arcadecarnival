@@ -707,10 +707,8 @@
             board[index] = player;
             cells[index].textContent = ''; // Clear text content
             
-            // Play pop sound when a move is made
-            if (player === 'X') {
-                playSound(popSound);
-            }
+            // Play pop sound for any move (player or computer)
+            playSound(popSound);
             
             // Add the appropriate 3D mark
             if (player === 'X') {
