@@ -1,0 +1,43 @@
+<!-- legends-unwritten/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legends Unwritten - A Dynamic Text Adventure</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+  
+  <meta name="description" content="Legends Unwritten is a text-based adventure game where your choices shape a unique story. Embark on a journey with dynamic storytelling that adapts to your decisions.">
+</head>
+<body>
+  <div class="container">
+    <!-- Menu Container (shown initially) -->
+    <div id="menu-container">
+      <!-- Will be populated by MenuUI -->
+    </div>
+    
+    <!-- Game Container (initially hidden) -->
+    <div id="game-container" style="display: none;">
+      <!-- Will be populated by GameUI -->
+    </div>
+    
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2023 Legends Unwritten. All rights reserved.</p>
+    </footer>
+  </div>
+  
+  <!-- Load game scripts -->
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
