@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            max-width: 90vw;
+            max-height: 90vh;
+            width: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #333;
+            width: 100%;
+        }
+
+        .audio-control {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        .audio-control i {
+            margin-right: 5px;
+        }
+
+        .audio-control:hover {
+            background-color: #2980b9;
+        }
+
+        .difficulty-selector {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .difficulty-selector select {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            margin-left: 5px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 8px;
+            margin-bottom: 10px;
+            margin: 0 auto;
+            justify-content: center;
+        }
+        
+        /* Easy uses 4 columns, Medium and Hard use 6 columns */
+        .grid-container.medium {
+            grid-template-columns: repeat(6, 1fr);
+        }
+        
+        .grid-container.hard {
+            grid-template-columns: repeat(6, 1fr);
+        }
+
+        .card {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 133.33%; /* 3:4 aspect ratio */
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-front {
+            background-color: white;
+            transform: rotateY(180deg);
+            font-size: 3em;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .card-front img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #3498db, #8e44ad);
+            background-size: cover;
+        }
+
+        button {
+            display: block;
+            margin: 0 auto;
+            padding: 8px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Animation for when cards match */
+        @keyframes match {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .matched .card-inner {
+            animation: match 0.5s;
+            box-shadow: 0 0 10px 5px rgba(46, 204, 113, 0.5);
+        }
+
+        /* Responsive design */
+        @media (max-height: 700px) {
+            h1 {
+                font-size: 20px;
+                margin-bottom: 5px;
+            }
+            
+            .difficulty-selector, .info-panel {
+                margin-bottom: 5px;
+                font-size: 14px;
+            }
+            
+            .difficulty-selector select {
+                font-size: 14px;
+                padding: 3px 6px;
+            }
+            
+            .grid-container {
+                grid-gap: 5px;
+                margin-bottom: 5px;
+            }
+            
+            button {
+                padding: 5px 10px;
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 500px) {
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .grid-container.medium, .grid-container.hard {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 350px) {
+            .grid-container, .grid-container.medium, .grid-container.hard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 90%;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal h2 {
+            color: #3498db;
+            margin-bottom: 15px;
+        }
+        
+        .modal p {
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .modal-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .modal-stat {
+            text-align: center;
+        }
+        
+        .modal-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .modal-stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .modal-button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        
+        .modal-button:hover {
+            background-color: #2980b9;
+        }
+
+        .win-message {
+            text-align: center;
+            font-size: 24px;
+            color: #27ae60;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Memory Card Game</h1>
+        
+        <!-- Audio elements for sound effects -->
+        <audio id="flip-sound" src="assets/card-sounds.mp3" preload="auto"></audio>
+        <audio id="match-sound" src="assets/pair.mp3" preload="auto"></audio>
+        <audio id="win-sound" src="assets/win.mp3" preload="auto"></audio>
+        
+        <!-- Difficulty Selector -->
+        <div class="difficulty-selector">
+            <label for="difficulty">Difficulty: </label>
+            <select id="difficulty">
+                <option value="easy">Easy (5x4)</option>
+                <option value="medium">Medium (6x5)</option>
+                <option value="hard">Hard (6x6)</option>
+            </select>
+        </div>
+        
+        <div class="info-panel">
+            <div class="moves">Moves: <span id="moves-count">0</span></div>
+            <div class="timer">Time: <span id="timer">00:00</span></div>
+            <button id="audio-control" class="audio-control">
+                <i class="fas fa-volume-up"></i> Sound On
+            </button>
+        </div>
+        <div class="win-message" id="win-message">You won! 🎉</div>
+        <div class="grid-container" id="grid">
+            <!-- Cards will be generated by JavaScript -->
+        </div>
+        <button id="reset-button">Reset Game</button>
+    </div>
+    
+    <!-- Completion Modal -->
+    <div class="modal-overlay" id="completion-modal">
+        <div class="modal">
+            <h2>Congratulations! 🎉</h2>
+            <p>You have matched all cards!</p>
+            
+            <div class="modal-stats">
+                <div class="modal-stat">
+                    <div class="modal-stat-value" id="modal-time">00:00</div>
+                    <div class="modal-stat-label">Time</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-value" id="modal-moves">0</div>
+                    <div class="modal-stat-label">Moves</div>
+                </div>
+            </div>
+            
+            <button class="modal-button" id="play-again-button">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game variables
+            let moves = 0;
+            let timer = 0;
+            let timerInterval;
+            let flippedCards = [];
+            let matchedPairs = 0;
+            let lockBoard = false;
+            let flipDelay = 1000; // Default flip delay
+            let cardCount = 20; // Default card count (4x5)
+            
+            // Elements
+            const grid = document.getElementById('grid');
+            const movesCount = document.getElementById('moves-count');
+            const timerElement = document.getElementById('timer');
+            const resetButton = document.getElementById('reset-button');
+            const winMessage = document.getElementById('win-message');
+            const completionModal = document.getElementById('completion-modal');
+            const modalTimeElement = document.getElementById('modal-time');
+            const modalMovesElement = document.getElementById('modal-moves');
+            const playAgainButton = document.getElementById('play-again-button');
+            const difficultySelector = document.getElementById('difficulty');
+            
+            // Sound elements
+            const flipSound = document.getElementById('flip-sound');
+            const matchSound = document.getElementById('match-sound');
+            const winSound = document.getElementById('win-sound');
+            const audioControl = document.getElementById('audio-control');
+            
+            // Sound state
+            let soundEnabled = true;
+            
+            // Function to play sounds
+            function playSound(sound) {
+                // Only play sound if enabled
+                if (soundEnabled) {
+                    // Reset the audio to the beginning
+                    sound.currentTime = 0;
+                    // Play the sound
+                    sound.play().catch(error => {
+                        // Handle any autoplay restrictions or loading errors
+                        console.log("Sound playback error:", error);
+                    });
+                }
+            }
+            
+            // Toggle sound function
+            function toggleSound() {
+                soundEnabled = !soundEnabled;
+                
+                if (soundEnabled) {
+                    audioControl.innerHTML = '<i class="fas fa-volume-up"></i> Sound On';
+                } else {
+                    audioControl.innerHTML = '<i class="fas fa-volume-mute"></i> Sound Off';
+                }
+            }
+            
+            // Add event listener to audio control button
+            audioControl.addEventListener('click', toggleSound);
+            
+            // Card images from assets folder
+            const cardImages = [
+                { path: 'assets/cat.png', name: 'cat' },
+                { path: 'assets/dog.png', name: 'dog' },
+                { path: 'assets/elephant.png', name: 'elephant' },
+                { path: 'assets/monkey.png', name: 'monkey' },
+                { path: 'assets/rabbit.png', name: 'rabbit' },
+                { path: 'assets/fox.png', name: 'fox' },
+                { path: 'assets/bear.png', name: 'bear' },
+                { path: 'assets/panda.png', name: 'panda' },
+                { path: 'assets/lion.png', name: 'lion' },
+                { path: 'assets/tiger.png', name: 'tiger' },
+                { path: 'assets/giraffe.png', name: 'giraffe' },
+                { path: 'assets/zebra.png', name: 'zebra' },
+                { path: 'assets/hedgehog.png', name: 'hedgehog' },
+                { path: 'assets/koala.png', name: 'koala' },
+                { path: 'assets/duck.png', name: 'duck' },
+                { path: 'assets/kangaroo.png', name: 'kangaroo' },
+                { path: 'assets/turtle.png', name: 'turtle' },
+                { path: 'assets/owl.png', name: 'owl' }
+            ];
+            
+            // Create duplicates of the images to ensure we have enough for all difficulties
+            // This ensures we don't run out of images for larger grids
+            const extendedCardImages = [...cardImages, ...cardImages];
+            
+            function adjustGridSize() {
+                // Get the header elements height (excluding win message which is hidden initially)
+                const headerHeight = 
+                    document.querySelector('h1').offsetHeight + 
+                    document.querySelector('.difficulty-selector').offsetHeight + 
+                    document.querySelector('.info-panel').offsetHeight + 
+                    document.querySelector('#reset-button').offsetHeight + 
+                    30; // Additional padding/margins
+                
+                // Calculate available space for the grid
+                const windowHeight = window.innerHeight;
+                const windowWidth = window.innerWidth;
+                const gameContainerHeight = windowHeight * 0.85; // 85vh to be safe
+                const gameContainerWidth = Math.min(windowWidth * 0.85, 900); // 85vw with a max width
+                
+                const availableHeight = gameContainerHeight - headerHeight;
+                
+                // Get the number of rows and columns
+                const gridStyles = getComputedStyle(grid);
+                let numberOfColumns = 4; // Default to 4 columns for easy
+                
+                // If medium or hard difficulty is selected, use 6 columns
+                if (difficultySelector.value === 'medium' || difficultySelector.value === 'hard') {
+                    numberOfColumns = 6;
+                }
+                
+                const numberOfRows = Math.ceil(cardCount / numberOfColumns);
+                const gridGap = parseInt(gridStyles.gridGap) || 8;
+                
+                // Calculate the maximum card width based on available width
+                const maxCardWidth = (gameContainerWidth - ((numberOfColumns - 1) * gridGap)) / numberOfColumns;
+                
+                // Calculate the maximum card height based on available height
+                const maxCardHeight = (availableHeight - ((numberOfRows - 1) * gridGap)) / numberOfRows;
+                
+                // Since we want 3:4 aspect ratio, we need to pick the most constraining dimension
+                // For 3:4 ratio, width should be 75% of height
+                let cardWidth, cardHeight;
+                
+                // If the width is the constraint
+                if (maxCardWidth < maxCardHeight * 0.75) {
+                    cardWidth = maxCardWidth;
+                    cardHeight = cardWidth * (4/3); // Apply 3:4 ratio
+                } else {
+                    // Height is the constraint
+                    cardHeight = maxCardHeight;
+                    cardWidth = cardHeight * 0.75; // Apply 3:4 ratio
+                }
+                
+                // Scale down slightly to ensure everything fits
+                cardWidth *= 0.95;
+                cardHeight *= 0.95;
+                
+                // Calculate grid dimensions
+                const gridWidth = (cardWidth * numberOfColumns) + ((numberOfColumns - 1) * gridGap);
+                const gridHeight = (cardHeight * numberOfRows) + ((numberOfRows - 1) * gridGap);
+                
+                // Set grid dimensions
+                grid.style.width = `${gridWidth}px`;
+                grid.style.height = `${gridHeight}px`;
+                grid.style.margin = '0 auto 10px auto'; // Center grid horizontally
+                
+                // Apply sizing to cards
+                document.querySelectorAll('.card').forEach(card => {
+                    card.style.width = `${cardWidth}px`;
+                    card.style.paddingBottom = `${cardHeight}px`;
+                    card.style.height = '0'; // Maintain aspect ratio approach
+                });
+            }
+            
+            // Set game difficulty
+            function setDifficulty(level) {
+                // Remove existing grid classes
+                grid.classList.remove('medium', 'hard');
+                
+                // Set grid size and card count based on difficulty
+                switch(level) {
+                    case 'easy':
+                        cardCount = 20; // 4x5 grid (10 pairs)
+                        flipDelay = 1000; // 1 second
+                        break;
+                    case 'medium':
+                        cardCount = 30; // 6x5 grid (15 pairs)
+                        grid.classList.add('medium');
+                        flipDelay = 750; // 0.75 seconds
+                        break;
+                    case 'hard':
+                        cardCount = 36; // 6x6 grid (18 pairs)
+                        grid.classList.add('hard');
+                        flipDelay = 500; // 0.5 seconds
+                        break;
+                }
+                
+                initGame();
+            }
+            
+            // Initialize the game
+            function initGame() {
+                // Reset variables
+                moves = 0;
+                timer = 0;
+                flippedCards = [];
+                matchedPairs = 0;
+                lockBoard = false;
+                
+                // Update UI
+                movesCount.textContent = '0';
+                timerElement.textContent = '00:00';
+                winMessage.style.display = 'none';
+                grid.innerHTML = '';
+                
+                // Reset audio button (ensure it matches the current sound state)
+                if (soundEnabled) {
+                    audioControl.innerHTML = '<i class="fas fa-volume-up"></i> Sound On';
+                } else {
+                    audioControl.innerHTML = '<i class="fas fa-volume-mute"></i> Sound Off';
+                }
+                
+                // Hide completion modal if visible
+                completionModal.classList.remove('active');
+                
+                // Clear timer
+                clearInterval(timerInterval);
+                
+                // Create pairs of cards and shuffle them
+                const cardPairs = [];
+                const pairsNeeded = cardCount / 2;
+                
+                // Add the required number of card pairs
+                for (let i = 0; i < pairsNeeded; i++) {
+                    // Use the extended card images array to ensure we have enough
+                    if (i < extendedCardImages.length) {
+                        cardPairs.push(extendedCardImages[i]);
+                        cardPairs.push(extendedCardImages[i]); // Add each image twice for matching
+                    }
+                }
+                
+                // Ensure we have exactly the right number of cards
+                while (cardPairs.length > cardCount) {
+                    cardPairs.pop();
+                }
+                
+                // Double-check that we have the correct number of cards
+                console.log(`Created ${cardPairs.length} cards for ${difficultySelector.value} difficulty (should be ${cardCount})`);
+                
+                const shuffledCards = shuffleArray(cardPairs);
+                
+                // Create card elements
+                shuffledCards.forEach((card, index) => {
+                    const cardElement = createCard(card, index);
+                    grid.appendChild(cardElement);
+                });
+                
+                // Start timer
+                startTimer();
+                
+                // Call adjustGridSize with slight delay to ensure DOM is updated
+                setTimeout(adjustGridSize, 100);
+            }
+            
+            // Create a card element
+            function createCard(cardData, index) {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.cardIndex = index;
+                card.dataset.cardName = cardData.name;
+                
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front"><img src="${cardData.path}" alt="${cardData.name}" /></div>
+                        <div class="card-back"></div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', flipCard);
+                return card;
+            }
+            
+            // Flip card function
+            function flipCard() {
+                // Prevent flipping if board is locked or the card is already flipped
+                if (lockBoard || this.classList.contains('flipped') || flippedCards.length >= 2) {
+                    return;
+                }
+                
+                // Flip the card
+                this.classList.add('flipped');
+                flippedCards.push(this);
+                
+                // Play flip sound
+                playSound(flipSound);
+                
+                // Check for match if two cards are flipped
+                if (flippedCards.length === 2) {
+                    incrementMoves();
+                    checkForMatch();
+                }
+            }
+            
+            // Check if the flipped cards match
+            function checkForMatch() {
+                lockBoard = true;
+                
+                const [firstCard, secondCard] = flippedCards;
+                
+                // Get card identifiers from data attribute
+                const firstIdentifier = firstCard.dataset.cardName;
+                const secondIdentifier = secondCard.dataset.cardName;
+                
+                if (firstIdentifier === secondIdentifier) {
+                    // Cards match
+                    firstCard.classList.add('matched');
+                    secondCard.classList.add('matched');
+                    
+                    // Play match sound
+                    playSound(matchSound);
+                    
+                    // Remove event listeners from matched cards
+                    firstCard.removeEventListener('click', flipCard);
+                    secondCard.removeEventListener('click', flipCard);
+                    
+                    matchedPairs++;
+                    flippedCards = [];
+                    lockBoard = false;
+                    
+                    // Check if all pairs are matched
+                    if (matchedPairs === cardCount / 2) {
+                        setTimeout(() => {
+                            endGame();
+                        }, 500);
+                    }
+                } else {
+                    // Cards don't match, flip them back
+                    setTimeout(() => {
+                        firstCard.classList.remove('flipped');
+                        secondCard.classList.remove('flipped');
+                        flippedCards = [];
+                        lockBoard = false;
+                    }, flipDelay);
+                }
+            }
+            
+            // Increment moves counter
+            function incrementMoves() {
+                moves++;
+                movesCount.textContent = moves;
+            }
+            
+            // Start the timer
+            function startTimer() {
+                timerInterval = setInterval(() => {
+                    timer++;
+                    const minutes = Math.floor(timer / 60).toString().padStart(2, '0');
+                    const seconds = (timer % 60).toString().padStart(2, '0');
+                    timerElement.textContent = `${minutes}:${seconds}`;
+                }, 1000);
+            }
+            
+            // End the game
+            function endGame() {
+                // Stop the timer
+                clearInterval(timerInterval);
+                
+                // Play win sound
+                playSound(winSound);
+                
+                // Show completion message in game
+                winMessage.style.display = 'block';
+                
+                // Format time for modal
+                const minutes = Math.floor(timer / 60).toString().padStart(2, '0');
+                const seconds = (timer % 60).toString().padStart(2, '0');
+                const timeString = `${minutes}:${seconds}`;
+                
+                // Update modal with game stats
+                modalTimeElement.textContent = timeString;
+                modalMovesElement.textContent = moves;
+                
+                // Make sure modal doesn't have any previous difficulty texts
+                const difficultyTexts = document.querySelectorAll('.difficulty-text');
+                difficultyTexts.forEach(el => el.remove());
+                
+                // Add difficulty level to results
+                const difficultyText = document.createElement('p');
+                difficultyText.className = 'difficulty-text';
+                difficultyText.textContent = `Difficulty: ${difficultySelector.value.charAt(0).toUpperCase() + difficultySelector.value.slice(1)}`;
+                document.querySelector('.modal-stats').after(difficultyText);
+                
+                // Show the completion modal with minimal delay
+                setTimeout(() => {
+                    completionModal.classList.add('active');
+                }, 500);
+            }
+            
+            // Shuffle an array (Fisher-Yates algorithm)
+            function shuffleArray(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+            
+            // Add window resize event listener to adjust grid size
+            window.addEventListener('resize', adjustGridSize);
+            
+            // Adjust grid size when difficulty changes
+            difficultySelector.addEventListener('change', function() {
+                setDifficulty(this.value);
+                setTimeout(adjustGridSize, 100); // Allow time for grid to update
+            });
+            
+            // Reset button event listener
+            resetButton.addEventListener('click', function() {
+                setDifficulty(difficultySelector.value);
+            });
+            
+            // Play again button event listener
+            playAgainButton.addEventListener('click', function() {
+                setDifficulty(difficultySelector.value);
+            });
+            
+                            // Debug function to verify card counts
+                function debugCardCounts() {
+                    console.log("Current difficulty:", difficultySelector.value);
+                    console.log("Card count:", cardCount);
+                    console.log("Cards in grid:", grid.children.length);
+                }
+                
+                // Initialize the game with default difficulty (easy)
+                setDifficulty('easy');
+                
+                // Add a small delay and log card counts to help debugging
+                setTimeout(debugCardCounts, 500);
+        });
+    </script>
+</body>
+</html>
